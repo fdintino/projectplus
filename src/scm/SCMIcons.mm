@@ -95,6 +95,9 @@ const NSString* overlayImageNames[] = {@"Modified", @"Added", @"Deleted", @"Vers
 
 		[[self standardWindowButton:NSWindowDocumentIconButton] setImage:icon];
 		[icon release];
+		
+		// Update the tree as well, file status may have changed
+		[[SCMIcons sharedInstance] redisplayProjectTrees];
 	}
 }
 @end
