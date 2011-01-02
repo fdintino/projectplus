@@ -206,13 +206,6 @@ static GitIcons *SharedInstance;
 	
 	if(!project)
 	{
-		if(projectPath && [projectPath length]>1)
-		{
-			[projectStatusesLock lock];
-			[projectStatuses setObject:[NSMutableDictionary dictionary] forKey:projectPath];
-			[projectStatusesLock unlock];
-		}
-		
 		return SCMIconsStatusUnknown;
 	}
 	
@@ -246,38 +239,38 @@ static GitIcons *SharedInstance;
 	return (SCMIconsStatus)[status intValue];
 }
 
+- (void)reloadStatusesForProject:(NSString*)projectPath
+{
+	NSString	*ppp=[projectPath stringByAppendingString:@"/"];
+	
+	NSLog(@"reloadStatusesForProject, ppp: %@",ppp);
+	
+	[projectStatusesLock lock];
+	
+	NSMutableDictionary	*newStatuses=[[NSMutableDictionary alloc]init];
+	
+	for(NSString *key in projectStatuses)
+	{
+		if(![key hasPrefix:ppp])
+		{
+			[newStatuses setObject:[projectStatuses objectForKey:key]forKey:key];
+		}
+	}
+		
+	[projectStatusesLock unlock];
+	
+#ifdef USE_THREADING
+	[NSThread detachNewThreadSelector:@selector(executeLsFilesForProject:) toTarget:self withObject:projectPath];
+#else
+	[self executeLsFilesUnderPath:project inProject:projectPath];
+#endif
+	
+	[self redisplayStatuses];
+}
+
 - (void)redisplayStatuses;
 {
 	[[SCMIcons sharedInstance] redisplayProjectTrees];
 }
 
-- (void)reloadStatusesForProject:(NSString*)projectPath
-{
-	// NSLog(@"%s  projectPath: %@",_cmd,projectPath);
-	
-	if(updateRunning) return;
-	
-	NSString	*project=[self gitRootForPath:projectPath];
-	
-	[projectStatusesLock lock];
-	if(project) [projectStatuses removeObjectForKey:project];
-	if(projectPath) [projectStatuses removeObjectForKey:projectPath];
-	
-	if(!project)
-	{
-		[projectStatuses setObject:[NSMutableDictionary dictionary] forKey:projectPath];
-		[projectStatusesLock unlock];
-		
-		return;
-	}
-	
-	[projectStatuses setObject:[NSMutableDictionary dictionary] forKey:project];
-	[projectStatusesLock unlock];
-	
-#ifdef USE_THREADING
-	[NSThread detachNewThreadSelector:@selector(executeLsFilesForProject:) toTarget:self withObject:project];
-#else
-	[self executeLsFilesUnderPath:project inProject:project];
-#endif
-}
 @end
