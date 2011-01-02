@@ -4,9 +4,7 @@
 
 @interface GitIcons : NSObject <SCMIconDelegate>
 {
-	NSMutableDictionary		*projectStatuses;
-	BOOL					updateRunning;
-	NSLock					*projectStatusesLock;
+	NSMutableDictionary		*fileStatuses;
 }
 + (GitIcons*)sharedInstance;
 @end
@@ -40,45 +38,35 @@ static GitIcons *SharedInstance;
 	}
 	else if(self = SharedInstance = [[super init] retain])
 	{
-		projectStatusesLock=[[NSLock alloc]init];
-		projectStatuses = [NSMutableDictionary new];
-		updateRunning=NO;
+		fileStatuses = [[NSMutableDictionary alloc]init];
 	}
 	return SharedInstance;
 }
 
 - (void)dealloc
 {
-	[projectStatuses release];
+	[fileStatuses release];
 	[super dealloc];
 }
 
 - (NSString*)gitPath;
 {
-	return [[SCMIcons sharedInstance] pathForVariable:@"TM_GIT" paths:[NSArray arrayWithObjects:@"/opt/local/bin/git",@"/usr/local/bin/git",@"/usr/bin/git",nil]];
+	NSString	*path=[[SCMIcons sharedInstance] pathForVariable:@"TM_GIT" paths:[NSArray arrayWithObjects:@"/opt/local/bin/git",@"/usr/local/bin/git",@"/usr/bin/git",nil]];
+	
+	if(path && ![[NSFileManager defaultManager]fileExistsAtPath:path])
+	{
+		path=nil;
+	}
+	
+	return path;
 }
 
 - (NSString *)gitRootForPath:(NSString *)path {
 	
 	if(!path) return nil;
 	
-	//
-	// Check if we know the project for this file
-	// 
-	NSString	*p=path;
+	// NSLog(@"gitRootForPath: %@",path);
 	
-	while(![p isEqualToString:@"/"])
-	{
-		[projectStatusesLock lock];
-		id o=[projectStatuses objectForKey:p];
-		[projectStatusesLock unlock];
-		if(o) return p;
-		p=[p stringByDeletingLastPathComponent];
-	}
-	
-	//
-	// We don't know the project yet, try and find the root
-	// 
 	NSFileManager	*fileManager=[NSFileManager defaultManager];
 	NSString		*home=NSHomeDirectory();
 	
@@ -90,24 +78,25 @@ static GitIcons *SharedInstance;
 		if([path isEqualToString:home]) return nil;
 	}
 	
+	// NSLog(@"gitRootForPath is: %@",path);
+	
 	return path;
 }
 
-- (void)executeLsFilesUnderPath:(NSString*)path inProject:(NSString*)projectPath
+- (void)executeLsFilesUnderPath:(NSString*)path
 {
-	// NSLog(@"%s  path: %@  projectPath: %@",_cmd,path,projectPath);
+	// NSLog(@"executeLsFilesUnderPath:  path: %@  (%@)",path,self);
 	
-	if(!path || !projectPath) return;
+	if(!path) return;
 	
 	NSString* exePath = [self gitPath];
-	if(!exePath || ![[NSFileManager defaultManager]fileExistsAtPath:exePath])
-		return;
+	if(!exePath) return;
 	
 	@try
 	{
 		NSTask* task = [[NSTask new] autorelease];
 		[task setLaunchPath:exePath];
-		[task setCurrentDirectoryPath:projectPath];
+		[task setCurrentDirectoryPath:path];
 		if(path)
 			[task setArguments:[NSArray arrayWithObjects:@"ls-files", @"--exclude-standard", @"-z", @"-t", @"-m", @"-c", @"-d", path, nil]];
 		else
@@ -130,18 +119,8 @@ static GitIcons *SharedInstance;
 			return;
 		}
 		
-		[projectStatusesLock lock];
-		
 		NSString 				*string=[[[NSString alloc]initWithData:data encoding:NSUTF8StringEncoding]autorelease];
 		NSArray					*lines=[string componentsSeparatedByString:@"\0"];
-		NSMutableDictionary		*projectDict=[projectStatuses objectForKey:projectPath];
-		
-		if(!projectDict)
-		{
-			projectDict=[[NSMutableDictionary alloc]init];
-			[projectStatuses setObject:projectDict forKey:projectPath];
-			[projectDict release];
-		}
 		
 		if([lines count] > 1)
 		{
@@ -151,10 +130,12 @@ static GitIcons *SharedInstance;
 				if([line length] > 3)
 				{
 					const char* statusChar = [[line substringToIndex:1] UTF8String];
-					NSString* filename     = [projectPath stringByAppendingPathComponent:[line substringFromIndex:2]];
+					NSString* filename     = [line substringFromIndex:2];
 					SCMIconsStatus status = SCMIconsStatusUnknown;
 					
 					if(!filename || [filename length]<1) continue;
+					
+					filename     = [path stringByAppendingPathComponent:filename];
 					
 					switch(*statusChar)
 					{
@@ -162,35 +143,21 @@ static GitIcons *SharedInstance;
 						case 'C': status = SCMIconsStatusModified; break;
 						case 'R': status = SCMIconsStatusDeleted; break;
 					}
-					[projectDict setObject:[NSNumber numberWithInt:status] forKey:filename];
+					[fileStatuses setObject:[NSNumber numberWithInt:status] forKey:filename];
+					// NSLog(@"%@: %d",filename,status);
 				}
 			}
 		}
-		
-		[projectStatusesLock unlock];
 	}
 	@catch(NSException* exception)
 	{
+		NSLog(@"executeLsFilesUnderPath caught exception: %@",exception);
 	}
-}
-
-- (void)executeLsFilesForProject:(NSString*)projectPath;
-{
-	if(updateRunning) return;
 	
-	updateRunning=YES;
-	
-	@try
-	{
-		NSAutoreleasePool* pool = [NSAutoreleasePool new];
-		[self executeLsFilesUnderPath:projectPath inProject:projectPath];
-		[self performSelectorOnMainThread:@selector(redisplayStatuses) withObject:nil waitUntilDone:NO];
-		[pool release];
-	}
-	@finally
-	{
-		updateRunning=NO;
-	}
+	//
+	// Fallback for uncontrolled files
+	// 
+	[fileStatuses setObject:[NSNumber numberWithInt:SCMIconsStatusUnknown] forKey:path];
 }
 
 // SCMIconDelegate
@@ -200,76 +167,64 @@ static GitIcons *SharedInstance;
 	
 	if(!path) return SCMIconsStatusUnknown;
 	
-	NSString	*project=[self gitRootForPath:path];
+	NSNumber	*sn=[fileStatuses objectForKey:path];
 	
-	// NSLog(@"project: %@",project);
+	if(sn) return (SCMIconsStatus)[sn intValue];
 	
-	if(!project)
+	
+	NSString	*gitRoot=[self gitRootForPath:path];
+	
+	// NSLog(@"gitRoot: %@",gitRoot);
+	
+	if(!gitRoot)
 	{
+		[fileStatuses setObject:[NSNumber numberWithInt:SCMIconsStatusUnknown] forKey:path];
+		
 		return SCMIconsStatusUnknown;
 	}
 	
-	[projectStatusesLock lock];
-	id o=[projectStatuses objectForKey:project];
-	[projectStatusesLock unlock];
+	//
+	// Uncontrolled file?
+	// 
+	sn=[fileStatuses objectForKey:gitRoot];
 	
-	if(reload || !o)
+	if(sn) return (SCMIconsStatus)[sn intValue];
+	
+	//
+	// Nope, get git statuses for gitRoot
+	// 
+	[self executeLsFilesUnderPath:gitRoot];
+	
+	sn=[fileStatuses objectForKey:path];
+	
+	if(!sn)
 	{
-		if(!o)
-		{
-			// NSLog(@"will load project status");
-			[projectStatusesLock lock];
-			[projectStatuses setObject:[NSMutableDictionary dictionary] forKey:project];
-			[projectStatusesLock unlock];
-			[self executeLsFilesUnderPath:project inProject:project];
-		}
-		else
-		{
-			// NSLog(@"will load file status");
-			[self executeLsFilesUnderPath:path inProject:project];
-		}
+		NSLog(@"Should have had state here, but don't!");
+		
+		return SCMIconsStatusUnknown;
 	}
 	
-	[projectStatusesLock lock];
-	NSNumber	*status=[[projectStatuses objectForKey:project]objectForKey:path];
-	[projectStatusesLock unlock];
-	
-	if(!status) return SCMIconsStatusUnknown;
-	
-	return (SCMIconsStatus)[status intValue];
+	return (SCMIconsStatus)[sn intValue];
 }
 
 - (void)reloadStatusesForProject:(NSString*)projectPath
 {
-	NSString	*ppp=[projectPath stringByAppendingString:@"/"];
-	
-	NSLog(@"reloadStatusesForProject, ppp: %@",ppp);
-	
-	[projectStatusesLock lock];
+	// NSLog(@"reloadStatusesForProject, projectPath: %@",projectPath);
 	
 	NSMutableDictionary	*newStatuses=[[NSMutableDictionary alloc]init];
 	
-	for(NSString *key in projectStatuses)
+	for(NSString *key in fileStatuses)
 	{
-		if(![key hasPrefix:ppp])
+		if(![key hasPrefix:projectPath])
 		{
-			[newStatuses setObject:[projectStatuses objectForKey:key]forKey:key];
+			[newStatuses setObject:[fileStatuses objectForKey:key]forKey:key];
 		}
 	}
-		
-	[projectStatusesLock unlock];
 	
-#ifdef USE_THREADING
-	[NSThread detachNewThreadSelector:@selector(executeLsFilesForProject:) toTarget:self withObject:projectPath];
-#else
-	[self executeLsFilesUnderPath:project inProject:projectPath];
-#endif
+	id	old=fileStatuses;
+	fileStatuses=newStatuses;
+	[old release];
 	
-	[self redisplayStatuses];
-}
-
-- (void)redisplayStatuses;
-{
 	[[SCMIcons sharedInstance] redisplayProjectTrees];
 }
 
