@@ -167,10 +167,14 @@ static GitIcons *SharedInstance;
 	
 	if(!path) return SCMIconsStatusUnknown;
 	
-	NSNumber	*sn=[fileStatuses objectForKey:path];
+	NSNumber	*sn=nil;
 	
-	if(sn) return (SCMIconsStatus)[sn intValue];
-	
+	if(!reload)
+	{
+		sn=[fileStatuses objectForKey:path];
+		
+		if(sn) return (SCMIconsStatus)[sn intValue];
+	}
 	
 	NSString	*gitRoot=[self gitRootForPath:path];
 	
@@ -183,12 +187,15 @@ static GitIcons *SharedInstance;
 		return SCMIconsStatusUnknown;
 	}
 	
-	//
-	// Uncontrolled file?
-	// 
-	sn=[fileStatuses objectForKey:gitRoot];
+	if(!reload)
+	{
+		//
+		// Uncontrolled file?
+		// 
+		sn=[fileStatuses objectForKey:gitRoot];
 	
-	if(sn) return (SCMIconsStatus)[sn intValue];
+		if(sn) return (SCMIconsStatus)[sn intValue];
+	}
 	
 	//
 	// Nope, get git statuses for gitRoot
