@@ -49,6 +49,7 @@
 		915AD5000ED9E6AD0017679A /* TMLabels.mm in Sources */ = {isa = PBXBuildFile; fileRef = 915AD4F00ED9E6AD0017679A /* TMLabels.mm */; };
 		915AD5010ED9E6AD0017679A /* Tooltips.mm in Sources */ = {isa = PBXBuildFile; fileRef = 915AD4F10ED9E6AD0017679A /* Tooltips.mm */; };
 		915AD5100ED9E7170017679A /* JRSwizzle.m in Sources */ = {isa = PBXBuildFile; fileRef = 915AD50B0ED9E7170017679A /* JRSwizzle.m */; };
+		CB1A5EE412D79A2900F3C550 /* GitRoot.png in Resources */ = {isa = PBXBuildFile; fileRef = CB1A5EE312D79A2900F3C550 /* GitRoot.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -116,6 +117,7 @@
 		915AD50B0ED9E7170017679A /* JRSwizzle.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JRSwizzle.m; sourceTree = "<group>"; };
 		915AD50E0ED9E7170017679A /* ProjectPlus_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ProjectPlus_Prefix.pch; sourceTree = "<group>"; };
 		915AD50F0ED9E7170017679A /* TextMate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TextMate.h; sourceTree = "<group>"; };
+		CB1A5EE312D79A2900F3C550 /* GitRoot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = GitRoot.png; sourceTree = "<group>"; };
 		D2F7E65807B2D6F200F64583 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
 
@@ -204,6 +206,7 @@
 		915AD3D90ED9E2070017679A /* resources */ = {
 			isa = PBXGroup;
 			children = (
+				CB1A5EE312D79A2900F3C550 /* GitRoot.png */,
 				915AD3DA0ED9E2070017679A /* InfoPlist.strings */,
 				915AD4180ED9E2070017679A /* Preferences.xib */,
 				915AD4190ED9E2070017679A /* projectplus.tiff */,
@@ -347,6 +350,7 @@
 				915AD42B0ED9E2070017679A /* InfoPlist.strings in Resources */,
 				915AD4600ED9E2070017679A /* Preferences.xib in Resources */,
 				915AD4610ED9E2070017679A /* projectplus.tiff in Resources */,
+				CB1A5EE412D79A2900F3C550 /* GitRoot.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

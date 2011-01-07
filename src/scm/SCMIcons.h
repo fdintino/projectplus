@@ -9,6 +9,7 @@ enum SCMIconsStatus {
 	SCMIconsStatusConflicted,
 	SCMIconsStatusUnversioned,
 	SCMIconsStatusUnknown,
+	SCMIconsStatusRoot = 1024,
 };
 
 @protocol SCMIconDelegate

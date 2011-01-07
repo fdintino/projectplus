@@ -91,6 +91,8 @@ static GitIcons *SharedInstance;
 	
 	NSString* exePath = [self gitPath];
 	if(!exePath) return;
+		
+	int			projectStatus=SCMIconsStatusRoot;
 	
 	@try
 	{
@@ -98,9 +100,9 @@ static GitIcons *SharedInstance;
 		[task setLaunchPath:exePath];
 		[task setCurrentDirectoryPath:path];
 		if(path)
-			[task setArguments:[NSArray arrayWithObjects:@"ls-files", @"--exclude-standard", @"-z", @"-t", @"-m", @"-c", @"-d", path, nil]];
+			[task setArguments:[NSArray arrayWithObjects:@"ls-files", @"--exclude-standard", @"-z", @"-t", @"-m", @"-c", @"-d", @"-o", path, nil]];
 		else
-			[task setArguments:[NSArray arrayWithObjects:@"ls-files", @"--exclude-standard", @"-z", @"-t", @"-m", @"-c", @"-d", nil]];
+			[task setArguments:[NSArray arrayWithObjects:@"ls-files", @"--exclude-standard", @"-z", @"-t", @"-m", @"-c", @"-d", @"-o", nil]];
 
 		NSPipe *pipe = [NSPipe pipe];
 		[task setStandardOutput: pipe];
@@ -142,8 +144,26 @@ static GitIcons *SharedInstance;
 						case 'H': status = SCMIconsStatusVersioned; break;
 						case 'C': status = SCMIconsStatusModified; break;
 						case 'R': status = SCMIconsStatusDeleted; break;
+						case '?': status = SCMIconsStatusUnversioned; break;
 					}
 					[fileStatuses setObject:[NSNumber numberWithInt:status] forKey:filename];
+					
+					if(status==SCMIconsStatusModified || status==SCMIconsStatusDeleted)
+					{
+						projectStatus|=SCMIconsStatusModified;
+						
+						//
+						// Set folder state!
+						// 
+						filename=[filename stringByDeletingLastPathComponent];
+						
+						while(![filename isEqualToString:path])
+						{
+							[fileStatuses setObject:[NSNumber numberWithInt:SCMIconsStatusModified] forKey:filename];
+							filename=[filename stringByDeletingLastPathComponent];
+						}
+					}
+					
 					// NSLog(@"%@: %d",filename,status);
 				}
 			}
@@ -155,9 +175,10 @@ static GitIcons *SharedInstance;
 	}
 	
 	//
-	// Fallback for uncontrolled files
+	// Status for git root
 	// 
-	[fileStatuses setObject:[NSNumber numberWithInt:SCMIconsStatusUnknown] forKey:path];
+	// [fileStatuses setObject:[NSNumber numberWithInt:SCMIconsStatusRoot] forKey:path];
+	[fileStatuses setObject:[NSNumber numberWithInt:projectStatus] forKey:path];
 }
 
 // SCMIconDelegate
@@ -182,6 +203,9 @@ static GitIcons *SharedInstance;
 	
 	if(!gitRoot)
 	{
+		//
+		// Uncontrolled file?
+		// 
 		[fileStatuses setObject:[NSNumber numberWithInt:SCMIconsStatusUnknown] forKey:path];
 		
 		return SCMIconsStatusUnknown;
@@ -194,7 +218,7 @@ static GitIcons *SharedInstance;
 		// 
 		sn=[fileStatuses objectForKey:gitRoot];
 	
-		if(sn) return (SCMIconsStatus)[sn intValue];
+		if(sn) return SCMIconsStatusUnknown;
 	}
 	
 	//

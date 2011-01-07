@@ -1,3 +1,15 @@
+h1. ProjectPlus Version 1.4
+
+* Much enhanced git support:
+** Works correctly in projects containing multiple git repositories
+** Folder icons show modified status if any file inside was modified or deleted
+** Folder containing repository root are marked
+** Un-versioned Files are hi-lighted 
+* Added icons for *SCMIconsStatusUnversioned* state
+
+Note for other SCMs: to hi-light the repository root, make sure the folder returns a status that is binary or'd with the new *SCMIconsStatusRoot* state. Also add an overlay image named <scmName>Root.<ext> to the *resources* folder and add it to the projects resources. <scmName> is the string returned by the -scmName method, <ext> is any image extension recognized by the system.
+
+
 h1. ProjectPlus Version 1.3
 
 * Updated Subversion libraries to 1.6
