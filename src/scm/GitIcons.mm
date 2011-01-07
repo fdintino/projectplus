@@ -206,7 +206,7 @@ static GitIcons *SharedInstance;
 	
 	if(!sn)
 	{
-		NSLog(@"Should have had state here, but don't!");
+		[fileStatuses setObject:[NSNumber numberWithInt:SCMIconsStatusUnknown] forKey:path];
 		
 		return SCMIconsStatusUnknown;
 	}
