@@ -87,8 +87,6 @@ static const NSString* PROJECTPLUS_PREFERENCES_LABEL = @"Project+";
 		object:nil
 	];
 	
-	NSLog(@"ProjectPlus_init ov: %@",[self valueForKey:@"outlineView"]);
-	
 	return self;
 }
 
