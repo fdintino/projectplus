@@ -447,7 +447,7 @@
 					"$(inherited)",
 				);
 				PRODUCT_NAME = ProjectPlus;
-				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
+				SDKROOT = "";
 				WRAPPER_EXTENSION = tmplugin;
 			};
 			name = Debug;
@@ -473,7 +473,7 @@
 					"$(inherited)",
 				);
 				PRODUCT_NAME = ProjectPlus;
-				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
+				SDKROOT = "";
 				WRAPPER_EXTENSION = tmplugin;
 			};
 			name = Release;
