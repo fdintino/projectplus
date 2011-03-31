@@ -101,8 +101,6 @@ static const NSString* PROJECTPLUS_PREFERENCES_LABEL = @"Project+";
 	
 	if(ovb.size.width!=svb.size.width)
 	{
-		NSLog(@"Adjusting bounds!!!");
-		
 		ovb.size.width=svb.size.width;
 		
 		[ov setBoundsSize:ovb.size];
