@@ -1,3 +1,11 @@
+h1. ProjectPlus Version 1.5
+
+* Avoid horizontal scrolling in outline view
+* Support for Root ahead/behind remote repository indicator for git
+
+Note for other SCMs: to show the ahead/behind markers, binary or a file status with *SCMIconsStatusAhead* or *SCMIconsStatusBehind*. Add overlay images to the *Resources* folder named `<scmName>(Ahead|Behind).<ext>`.
+
+
 h1. ProjectPlus Version 1.4
 
 * Much enhanced git support:

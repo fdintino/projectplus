@@ -14,7 +14,7 @@ const NSString* overlayImageNames[] = {@"Modified", @"Added", @"Deleted", @"Vers
 - (NSImage*)imageForStatusCode:(SCMIconsStatus)status;
 - (SCMIconsStatus)statusForPath:(NSString*)path inProject:(NSString*)projectPath reload:(BOOL)reload;
 - (SCMIconsStatus)statusForPath:(NSString*)path inProject:(NSString*)projectPath reload:(BOOL)reload scmName:(NSString **)scmName;
-- (NSImage *)projectRootIconForScmNamed:(NSString *)scmName;
+- (NSImage *)projectIconNamed:(NSString *)overlayName forScmNamed:(NSString *)scmName;
 @end
 
 @interface NSWindowController (SCMAppSwitching)
@@ -30,6 +30,26 @@ const NSString* overlayImageNames[] = {@"Modified", @"Added", @"Deleted", @"Vers
 @end
 
 @implementation NSOutlineView (SCMOutlineView)
+
+- (void)drawOverlay:(NSString *)overlayName
+	forScmNamed:(NSString *)scmName
+	inRect:(NSRect)iconRect
+	flip:(BOOL)flip
+{
+	
+	NSImage	*image=[[SCMIcons sharedInstance]projectIconNamed:overlayName forScmNamed:scmName];
+	
+	if(image)
+	{
+		if(flip) [image setFlipped:YES];
+		[image drawInRect:iconRect
+                fromRect:NSZeroRect
+               operation:NSCompositeSourceOver
+                fraction:1];
+		if(flip) [image setFlipped:NO];
+	}
+}
+
 - (void)drawOverlayForRow:(int)rowNumber inProject:(NSString*)projectPath;
 {
 	NSDictionary* item = [self itemAtRow:rowNumber];
@@ -58,19 +78,17 @@ const NSString* overlayImageNames[] = {@"Modified", @"Added", @"Deleted", @"Vers
 		
 		if(status&SCMIconsStatusRoot && scmName)
 		{
-			NSImage	*rootImage=[[SCMIcons sharedInstance]projectRootIconForScmNamed:scmName];
+			NSRect	iconRect=NSMakeRect(
+				LIST_OFFSET + ([self levelForRow:rowNumber] + 1) * [self indentationPerLevel],
+				rowNumber * ([self rowHeight] + [self intercellSpacing].height),
+				ICON_SIZE,
+				ICON_SIZE
+			);
 			
-			if(rootImage)
-			{
-				[rootImage setFlipped:YES];
-				[rootImage drawInRect:NSMakeRect(LIST_OFFSET + ([self levelForRow:rowNumber] + 1) * [self indentationPerLevel],
-														rowNumber * ([self rowHeight] + [self intercellSpacing].height),
-														ICON_SIZE, ICON_SIZE)
-	                    fromRect:NSZeroRect
-	                   operation:NSCompositeSourceOver
-	                    fraction:1];
-				[rootImage setFlipped:NO];
-			}
+			[self drawOverlay:@"Root" forScmNamed:scmName inRect:iconRect flip:YES];
+			
+			if(status&SCMIconsStatusAhead) [self drawOverlay:@"Ahead" forScmNamed:scmName inRect:iconRect flip:YES];
+			if(status&SCMIconsStatusBehind) [self drawOverlay:@"Behind" forScmNamed:scmName inRect:iconRect flip:YES];
 		}
 	}
 }
@@ -114,12 +132,12 @@ const NSString* overlayImageNames[] = {@"Modified", @"Added", @"Deleted", @"Vers
 		
 		if(status&SCMIconsStatusRoot && scmName)
 		{
-			NSImage	*rootImage=[[SCMIcons sharedInstance]projectRootIconForScmNamed:scmName];
+			NSRect	iconRect=NSMakeRect(0, 0, [icon size].width, [icon size].height);
 			
-			[rootImage drawInRect:NSMakeRect(0, 0, [icon size].width, [icon size].height)
-		              fromRect:NSZeroRect
-		             operation:NSCompositeSourceOver
-		              fraction:1];
+			[self drawOverlay:@"Root" forScmNamed:scmName inRect:iconRect flip:NO];
+
+			if(status&SCMIconsStatusAhead) [self drawOverlay:@"Ahead" forScmNamed:scmName inRect:iconRect flip:NO];
+			if(status&SCMIconsStatusBehind) [self drawOverlay:@"Behind" forScmNamed:scmName inRect:iconRect flip:NO];
 		}
 		
 		[icon unlockFocus];
@@ -293,19 +311,19 @@ static SCMIcons* SharedInstance;
 	return [[self iconPack] objectForKey:name];
 }
 
-- (NSImage *)projectRootIconForScmNamed:(NSString *)scmName
+- (NSImage *)projectIconNamed:(NSString *)overlayName forScmNamed:(NSString *)scmName
 {
 	static NSMutableDictionary	*projectRootIcons=nil;
 	
 	if(!scmName) return nil;
 	
-	NSImage		*image=[projectRootIcons objectForKey:scmName];
+	NSString	*imageName=[scmName stringByAppendingString:overlayName];
+	NSImage		*image=[projectRootIcons objectForKey:imageName];
 	
 	if(!image)
 	{
 		if(!projectRootIcons) projectRootIcons=[[NSMutableDictionary alloc]init];
 		
-		NSString	*imageName=[scmName stringByAppendingString:@"Root"];
 		NSString	*path=[[NSBundle bundleForClass:[SCMIcons class]]
 			pathForImageResource:imageName
 		];

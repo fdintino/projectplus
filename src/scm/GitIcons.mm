@@ -96,6 +96,40 @@ static GitIcons *SharedInstance;
 	
 	@try
 	{
+		{
+			NSTask			*task=[[NSTask alloc]init];
+			
+			[task setLaunchPath:exePath];
+			[task setCurrentDirectoryPath:path];
+			
+			[task setArguments:[NSArray arrayWithObjects:@"status",@"-bsuno",nil]];
+			
+			NSPipe			*pipe=[NSPipe pipe];
+			[task setStandardOutput:pipe];
+			[task setStandardError:[NSPipe pipe]]; // Prevent errors from being printed to the Console
+
+			NSFileHandle	*file=[pipe fileHandleForReading];
+			
+			[task launch];
+			
+			NSData			*data=[file readDataToEndOfFile];
+			
+			[task waitUntilExit];
+			
+			if(data)
+			{
+				NSString 	*string=[[[NSString alloc]initWithData:data encoding:NSUTF8StringEncoding]autorelease];
+				
+				NSRange		r=[string rangeOfString:@"ahead" options:NSCaseInsensitiveSearch];
+				
+				if(r.location!=NSNotFound) projectStatus|=SCMIconsStatusAhead;
+				
+				r=[string rangeOfString:@"behind" options:NSCaseInsensitiveSearch];
+				if(r.location!=NSNotFound) projectStatus|=SCMIconsStatusBehind;
+			}
+		}
+		
+		
 		NSTask* task = [[NSTask new] autorelease];
 		[task setLaunchPath:exePath];
 		[task setCurrentDirectoryPath:path];
