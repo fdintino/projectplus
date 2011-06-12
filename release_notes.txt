@@ -1,3 +1,8 @@
+h1. ProjectPlus Version 1.51
+
+* Bugfix, seems to fix occasional TM crash when using git
+
+
 h1. ProjectPlus Version 1.5
 
 * Avoid horizontal scrolling in outline view
