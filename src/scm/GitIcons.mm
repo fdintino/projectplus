@@ -115,6 +115,7 @@ static GitIcons *SharedInstance;
 			NSData			*data=[file readDataToEndOfFile];
 			
 			[task waitUntilExit];
+			[task release];
 			
 			if(data)
 			{
@@ -130,7 +131,7 @@ static GitIcons *SharedInstance;
 		}
 		
 		
-		NSTask* task = [[NSTask new] autorelease];
+		NSTask			*task=[[NSTask alloc]init];
 		[task setLaunchPath:exePath];
 		[task setCurrentDirectoryPath:path];
 		if(path)
@@ -146,11 +147,14 @@ static GitIcons *SharedInstance;
 
 		[task launch];
 
-		NSData *data = [file readDataToEndOfFile];
+		NSData		*data = [file readDataToEndOfFile];
 
 		[task waitUntilExit];
-
-		if([task terminationStatus] != 0)
+		int			terminationStatus=[task terminationStatus];
+		
+		[task release];
+		
+		if(terminationStatus != 0)
 		{
 			return;
 		}
