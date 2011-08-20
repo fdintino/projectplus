@@ -4,6 +4,18 @@ ProjectPlus Plugin for TextMate
 `Download ProjectPlus 1.52
 <https://github.com/downloads/fdintino/projectplus/ProjectPlus.tmplugin.zip>`_.
 
+ProjectPlus is a plugin for TextMate which extends the functionality of
+project-related features. It offers an enhanced project drawer with the
+following features:
+
+- A more standard project drawer compatible with OS X Lion
+- SCM badges for Git, Mercurial, SVN, Svk, and Bazaar
+- The ability to sort the project drawer by extension, or with folders
+  on top
+- An optional Workspace view that replaces TextMate's standard tab view
+- Preservation of project state
+- Integration with Finder color labels
+
 Requirements
 ============
 - Mac OS X 10.6 or higher
