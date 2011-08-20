@@ -1,3 +1,8 @@
-![Screen Shot](http://markhuot.github.com/projectplus/shot.png)
+[Download ProjectPlus 1.51](https://github.com/downloads/fdintino/projectplus/ProjectPlus.tmplugin.zip)
 
-An updated version ready for Lion.
+### Requirements
+* Mac OS X 10.6 or higher
+* TextMate 1.5.10
+* An Intel mac
+
+![Screen Shot](http://markhuot.github.com/projectplus/shot.png)
