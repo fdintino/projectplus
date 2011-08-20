@@ -92,7 +92,7 @@
 	if([item action] == @selector(openSelectedItemWith:))
 		return YES;
 
-	return [self OpenWith_validateMenuItem:item];
+	return NO;
 }
 @end
 
