@@ -1,3 +1,10 @@
+h1. ProjectPlus Version 1.52
+
+* Git enhancements and bug fixes
+** Implemented threading for the git SCM project reload method
+** Fixed bug where file status was occasionally lost when performing a refresh on a large project
+
+
 h1. ProjectPlus Version 1.51
 
 * Bugfix, seems to fix occasional TM crash when using git
