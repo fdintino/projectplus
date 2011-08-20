@@ -68,12 +68,48 @@ static const NSString* PROJECTPLUS_PREFERENCES_LABEL = @"Project+";
 {
 	self = [self ProjectPlus_init];
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(ProjectPlus_redrawRequired:) name:ProjectPlus_redrawRequired object:nil];
+	
+	[[NSNotificationCenter defaultCenter]
+		addObserver:self
+		selector:@selector(ProjectPlus_Check_OutlineView_Bounds:)
+		name:NSOutlineViewItemDidExpandNotification
+		object:nil
+	];
+	[[NSNotificationCenter defaultCenter]
+		addObserver:self
+		selector:@selector(ProjectPlus_Check_OutlineView_Bounds:)
+		name:NSViewFrameDidChangeNotification
+		object:nil
+	];
+	
 	return self;
+}
+
+- (void)ProjectPlus_Check_OutlineView_Bounds:(NSNotification*)notification {
+	
+	NSOutlineView	*ov=(NSOutlineView*)[self valueForKey:@"outlineView"];
+	
+	NSRect	ovb=[ov bounds];
+	NSRect	svb=[[[ov enclosingScrollView]contentView]bounds];
+	
+	if(ovb.size.width!=svb.size.width)
+	{
+		ovb.size.width=svb.size.width;
+		
+		[ov setBoundsSize:ovb.size];
+		
+		[ov setColumnAutoresizingStyle:NSTableViewLastColumnOnlyAutoresizingStyle];
+		[ov sizeLastColumnToFit];
+		
+		[ov setNeedsDisplay:YES];
+	}
 }
 
 - (void)ProjectPlus_redrawRequired:(NSNotification*)notification
 {
-	[(NSOutlineView*)[self valueForKey:@"outlineView"] setNeedsDisplay:YES];
+	NSOutlineView	*ov=(NSOutlineView*)[self valueForKey:@"outlineView"];
+	
+	[ov setNeedsDisplay:YES];
 }
 @end
 

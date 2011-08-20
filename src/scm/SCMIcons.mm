@@ -13,6 +13,8 @@ const NSString* overlayImageNames[] = {@"Modified", @"Added", @"Deleted", @"Vers
 - (void)reloadStatusesForProject:(NSString*)projectPath;
 - (NSImage*)imageForStatusCode:(SCMIconsStatus)status;
 - (SCMIconsStatus)statusForPath:(NSString*)path inProject:(NSString*)projectPath reload:(BOOL)reload;
+- (SCMIconsStatus)statusForPath:(NSString*)path inProject:(NSString*)projectPath reload:(BOOL)reload scmName:(NSString **)scmName;
+- (NSImage *)projectIconNamed:(NSString *)overlayName forScmNamed:(NSString *)scmName;
 @end
 
 @interface NSWindowController (SCMAppSwitching)
@@ -28,14 +30,35 @@ const NSString* overlayImageNames[] = {@"Modified", @"Added", @"Deleted", @"Vers
 @end
 
 @implementation NSOutlineView (SCMOutlineView)
+
+- (void)drawOverlay:(NSString *)overlayName
+	forScmNamed:(NSString *)scmName
+	inRect:(NSRect)iconRect
+	flip:(BOOL)flip
+{
+	
+	NSImage	*image=[[SCMIcons sharedInstance]projectIconNamed:overlayName forScmNamed:scmName];
+	
+	if(image)
+	{
+		if(flip) [image setFlipped:YES];
+		[image drawInRect:iconRect
+                fromRect:NSZeroRect
+               operation:NSCompositeSourceOver
+                fraction:1];
+		if(flip) [image setFlipped:NO];
+	}
+}
+
 - (void)drawOverlayForRow:(int)rowNumber inProject:(NSString*)projectPath;
 {
 	NSDictionary* item = [self itemAtRow:rowNumber];
 
 	if (item) {
+		NSString* scmName=nil;
 		NSString* path        = [item objectForKey:@"filename"];
 		if (!path) path       = [item objectForKey:@"sourceDirectory"];
-		SCMIconsStatus status = [[SCMIcons sharedInstance] statusForPath:path inProject:projectPath reload:NO];
+		SCMIconsStatus status = [[SCMIcons sharedInstance] statusForPath:path inProject:projectPath reload:NO scmName:&scmName];
 		
 		NSImage* overlay = [[SCMIcons sharedInstance] imageForStatusCode:status];
 		if (overlay)
@@ -51,6 +74,21 @@ const NSString* overlayImageNames[] = {@"Modified", @"Added", @"Deleted", @"Vers
                    operation:NSCompositeSourceOver
                     fraction:1];
 			[overlay setFlipped:NO];
+		}
+		
+		if(status&SCMIconsStatusRoot && scmName)
+		{
+			NSRect	iconRect=NSMakeRect(
+				LIST_OFFSET + ([self levelForRow:rowNumber] + 1) * [self indentationPerLevel],
+				rowNumber * ([self rowHeight] + [self intercellSpacing].height),
+				ICON_SIZE,
+				ICON_SIZE
+			);
+			
+			[self drawOverlay:@"Root" forScmNamed:scmName inRect:iconRect flip:YES];
+			
+			if(status&SCMIconsStatusAhead) [self drawOverlay:@"Ahead" forScmNamed:scmName inRect:iconRect flip:YES];
+			if(status&SCMIconsStatusBehind) [self drawOverlay:@"Behind" forScmNamed:scmName inRect:iconRect flip:YES];
 		}
 	}
 }
@@ -78,9 +116,10 @@ const NSString* overlayImageNames[] = {@"Modified", @"Added", @"Deleted", @"Vers
 
 	if([[self delegate] isKindOfClass:OakProjectController])
 	{
+		NSString* scmName=nil;
 		NSString* projectPath = [[self delegate] valueForKey:@"projectDirectory"];
 
-		SCMIconsStatus status = [[SCMIcons sharedInstance] statusForPath:path inProject:projectPath reload:YES];
+		SCMIconsStatus status = [[SCMIcons sharedInstance] statusForPath:path inProject:projectPath reload:YES scmName:&scmName];
 		NSImage* overlay      = [[SCMIcons sharedInstance] imageForStatusCode:status];
 
 		NSImage* icon = [[[self standardWindowButton:NSWindowDocumentIconButton] image] copy];
@@ -90,7 +129,17 @@ const NSString* overlayImageNames[] = {@"Modified", @"Added", @"Deleted", @"Vers
 	              fromRect:NSZeroRect
 	             operation:NSCompositeSourceOver
 	              fraction:1];
+		
+		if(status&SCMIconsStatusRoot && scmName)
+		{
+			NSRect	iconRect=NSMakeRect(0, 0, [icon size].width, [icon size].height);
+			
+			[self drawOverlay:@"Root" forScmNamed:scmName inRect:iconRect flip:NO];
 
+			if(status&SCMIconsStatusAhead) [self drawOverlay:@"Ahead" forScmNamed:scmName inRect:iconRect flip:NO];
+			if(status&SCMIconsStatusBehind) [self drawOverlay:@"Behind" forScmNamed:scmName inRect:iconRect flip:NO];
+		}
+		
 		[icon unlockFocus];
 
 		[[self standardWindowButton:NSWindowDocumentIconButton] setImage:icon];
@@ -262,9 +311,44 @@ static SCMIcons* SharedInstance;
 	return [[self iconPack] objectForKey:name];
 }
 
+- (NSImage *)projectIconNamed:(NSString *)overlayName forScmNamed:(NSString *)scmName
+{
+	static NSMutableDictionary	*projectRootIcons=nil;
+	
+	if(!scmName) return nil;
+	
+	NSString	*imageName=[scmName stringByAppendingString:overlayName];
+	NSImage		*image=[projectRootIcons objectForKey:imageName];
+	
+	if(!image)
+	{
+		if(!projectRootIcons) projectRootIcons=[[NSMutableDictionary alloc]init];
+		
+		NSString	*path=[[NSBundle bundleForClass:[SCMIcons class]]
+			pathForImageResource:imageName
+		];
+
+		if(path)
+		{
+			image=[[NSImage alloc]initByReferencingFile:path];
+		}
+		
+		if(!image) image=(NSImage *)[NSNull null];
+		
+		[projectRootIcons setObject:image forKey:imageName];
+	}
+	
+	if(image==(NSImage *)[NSNull null]) return nil;
+	
+	return image;	
+}
+
 - (NSImage*)imageForStatusCode:(SCMIconsStatus)status
 {
-	switch(status)
+	int s=status;
+	s&=0x3ff;
+	
+	switch(s)
 	{
 		case 0:
 		case SCMIconsStatusVersioned:    return [self overlayIcon:@"Versioned"];
@@ -316,7 +400,7 @@ static SCMIcons* SharedInstance;
 	}
 }
 
-- (SCMIconsStatus)statusForPath:(NSString*)path inProject:(NSString*)projectPath reload:(BOOL)reload;
+- (SCMIconsStatus)statusForPath:(NSString*)path inProject:(NSString*)projectPath reload:(BOOL)reload scmName:(NSString **)scmName
 {
 	if([path length] == 0)
 		return SCMIconsStatusUnknown;
@@ -328,12 +412,18 @@ static SCMIcons* SharedInstance;
 		{
 			SCMIconsStatus status = [delegate statusForPath:path inProject:projectPath reload:reload];
 			if(status != SCMIconsStatusUnknown)
+			{
+				if(scmName) *scmName=[delegate scmName];
 				return status;
+			}
 		}
 	}
 	return SCMIconsStatusUnknown;
 }
-
+- (SCMIconsStatus)statusForPath:(NSString*)path inProject:(NSString*)projectPath reload:(BOOL)reload
+{
+	return [self statusForPath:path inProject:projectPath reload:reload scmName:NULL]; 
+}
 - (int)numberOfRowsInTableView:(NSTableView*)tableView
 {
 	return [delegates count];
