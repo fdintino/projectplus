@@ -94,6 +94,8 @@ static GitIcons *SharedInstance;
 		
 	int			projectStatus=SCMIconsStatusRoot;
 	
+	[fileStatuses retain];
+	[path retain];
 	@try
 	{
 		{
@@ -156,19 +158,23 @@ static GitIcons *SharedInstance;
 		
 		if(terminationStatus != 0)
 		{
+			[fileStatuses release];
+			[path release];
 			return;
 		}
 		
 		NSString 				*string=[[[NSString alloc]initWithData:data encoding:NSUTF8StringEncoding]autorelease];
 		NSArray					*lines=[string componentsSeparatedByString:@"\0"];
-		
-		if([lines count] > 1)
+		@synchronized(fileStatuses)
 		{
-			for(int index = 0; index < [lines count]; index++)
+			if([lines count] > 1)
 			{
-				NSString* line = [lines objectAtIndex:index];
-				if([line length] > 3)
+				for(int index = 0; index < [lines count]; index++)
 				{
+					NSString* line = [lines objectAtIndex:index];
+					if([line length] <= 3) {
+						continue;
+					}
 					const char* statusChar = [[line substringToIndex:1] UTF8String];
 					NSString* filename     = [line substringFromIndex:2];
 					SCMIconsStatus status = SCMIconsStatusUnknown;
@@ -225,13 +231,19 @@ static GitIcons *SharedInstance;
 	// 
 	// [fileStatuses setObject:[NSNumber numberWithInt:SCMIconsStatusRoot] forKey:path];
 	[fileStatuses setObject:[NSNumber numberWithInt:projectStatus] forKey:path];
+	[path release];
+	[fileStatuses release];
 }
 
 - (void)executeLsFilesForProject:(NSString*)projectPath;
 {
 	NSAutoreleasePool* pool = [NSAutoreleasePool new];
+	[fileStatuses retain];
+	[projectPath retain];
 	[self executeLsFilesUnderPath:projectPath];
 	[self performSelectorOnMainThread:@selector(redisplayStatuses) withObject:nil waitUntilDone:NO];
+	[projectPath release];
+	[fileStatuses release];
 	[pool release];
 }
 
@@ -297,8 +309,12 @@ static GitIcons *SharedInstance;
 
 - (void)reloadStatusesForProject:(NSString*)projectPath
 {
+	[fileStatuses retain];
+	[projectPath retain];
 	// NSLog(@"reloadStatusesForProject, projectPath: %@",projectPath);
 	[NSThread detachNewThreadSelector:@selector(executeLsFilesForProject:) toTarget:self withObject:projectPath];
+	[projectPath release];
+	[fileStatuses release];
 }
 
 @end
