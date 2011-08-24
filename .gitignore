@@ -4,3 +4,5 @@ ProjectPlus.xcodeproj/project.xcworkspace/xcuserdata/markhuot.*
 *.tmproj
 .DS_Store
 dsa_priv.pem
+ProjectPlus.xcodeproj/*.pbxuser
+ProjectPlus.xcodeproj/*.mode1v3
