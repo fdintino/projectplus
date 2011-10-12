@@ -112,23 +112,23 @@ NSInteger sort_items(id a, id b, void *context)
 	[self resortItems];
 }
 
-- (void)toggleDescending:(id <NSMenuItem>)menuItem
+- (void)toggleDescending: (NSMenuItem *) menuItem
 {
-	[menuItem setState:! [menuItem state]];
+	[menuItem setState: ![menuItem state] ? NSOnState : NSOffState];
 	[[self sortDescriptor] setObject:[NSNumber numberWithBool:[menuItem state]] forKey:@"descending"];
 	[self resortItems];
 }
 
-- (void)toggleByExtension:(id <NSMenuItem>)menuItem
+- (void)toggleByExtension: (NSMenuItem *) menuItem
 {
-	[menuItem setState:! [menuItem state]];
+	[menuItem setState: ![menuItem state] ? NSOnState : NSOffState];
 	[[self sortDescriptor] setObject:[NSNumber numberWithBool:[menuItem state]] forKey:@"byExtension"];
 	[self resortItems];
 }
 
-- (void)toggleFoldersOnTop:(id <NSMenuItem>)menuItem
+- (void)toggleFoldersOnTop: (NSMenuItem *) menuItem
 {
-	[menuItem setState:! [menuItem state]];
+	[menuItem setState: ![menuItem state] ? NSOnState : NSOffState];
 	[[self sortDescriptor] setObject:[NSNumber numberWithBool:[menuItem state]] forKey:@"foldersOnTop"];
 	[self resortItems];
 }
@@ -181,7 +181,7 @@ NSInteger sort_items(id a, id b, void *context)
 	[sortingMenu release];
 }
 
-- (BOOL)ProjectPlus_Sorting_validateMenuItem:(id <NSMenuItem>)menuItem
+- (BOOL)ProjectPlus_Sorting_validateMenuItem: (NSMenuItem *) menuItem
 {
 	if([menuItem action] == @selector(toggleDescending:) || [menuItem action] == @selector(toggleByExtension:))
 		return YES;

@@ -113,7 +113,7 @@
 	[self setSidebarIsClosed:close];
 }
 
-- (BOOL)SideBarSwitching_validateMenuItem:(id <NSMenuItem>)item;
+- (BOOL)SideBarSwitching_validateMenuItem: (NSMenuItem *) item;
 {
 	BOOL valid = [self SideBarSwitching_validateMenuItem:item];
 	

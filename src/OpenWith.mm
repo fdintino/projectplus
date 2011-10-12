@@ -28,7 +28,7 @@
 			NSMenuItem *openWithMenuItem = [[NSMenuItem alloc] initWithTitle:@"Open With…" action:nil keyEquivalent:@""];
 			{
 				NSMenu *openWithSubMenu = [[NSMenu alloc] init];
-				[openWithSubMenu setDelegate:self];
+				[openWithSubMenu setDelegate:(NSButton<NSMenuDelegate>*)self];
 
 				[openWithMenuItem setSubmenu:openWithSubMenu];
 				[openWithSubMenu release];
@@ -80,14 +80,14 @@
 	return YES;
 }
 
-- (void)openSelectedItemWith:(id <NSMenuItem>)sender
+- (void)openSelectedItemWith: (NSMenuItem *) sender
 {
 	NSString* filePath = [[self URLForOpeningApp] path];
-	NSString* appPath = [[[OpenWith applicationsForURL:[self URLForOpeningApp]] objectAtIndex:[sender tag]] path];
+	NSString* appPath = [[[OpenWith applicationsForURL:[self URLForOpeningApp]] objectAtIndex:(NSUInteger)[sender tag]] path];
 	[[NSWorkspace sharedWorkspace] openFile:filePath withApplication:appPath];
 }
 
-- (BOOL)OpenWith_validateMenuItem:(id <NSMenuItem>)item
+- (BOOL)OpenWith_validateMenuItem: (NSMenuItem *) item
 {
 	if([item action] == @selector(openSelectedItemWith:))
 		return YES;
