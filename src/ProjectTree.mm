@@ -82,7 +82,7 @@
     // to bring it into this century.
     NSOutlineView *fileBrowserOutlineView = [self valueForKey:@"outlineView"];
     [fileBrowserOutlineView setSelectionHighlightStyle:NSTableViewSelectionHighlightStyleSourceList];
-    [fileBrowserOutlineView setRowHeight:14];
+    [fileBrowserOutlineView setRowHeight:15];
  	[fileBrowserOutlineView setIntercellSpacing:NSMakeSize(3.0, 6.0)];
     [fileBrowserOutlineView setAutoresizingMask:NSViewHeightSizable];
     
