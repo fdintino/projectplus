@@ -168,7 +168,7 @@ static SCMIcons* SharedInstance;
 	{
 		[self release];
 	}
-	else if(self = SharedInstance = [[super init] retain])
+	else if((self = SharedInstance = [[super init] retain]))
 	{
 		NSApp = [NSApplication sharedApplication];
 		
@@ -280,7 +280,7 @@ static SCMIcons* SharedInstance;
 	NSDirectoryEnumerator* dirEnum = [[NSFileManager defaultManager] enumeratorAtPath:iconsPath];
 	NSString* iconPackName;
 
-	while(iconPackName = [dirEnum nextObject])
+	while((iconPackName = [dirEnum nextObject]))
 	{
 		[dirEnum skipDescendents];
 		if([[dirEnum fileAttributes] objectForKey:NSFileType] == NSFileTypeDirectory)

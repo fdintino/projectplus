@@ -126,7 +126,7 @@ static ProjectPlus* SharedInstance = nil;
 	{
 		[self release];
 	}
-	else if(self = SharedInstance = [[super init] retain])
+	else if((self = SharedInstance = [[super init] retain]))
 	{
 		quickLookAvailable = [[NSBundle bundleWithPath:@"/System/Library/PrivateFrameworks/QuickLookUI.framework"] load];
 
@@ -155,7 +155,7 @@ static ProjectPlus* SharedInstance = nil;
 
 - (id)initWithPlugInController:(id <TMPlugInController>)aController
 {
-	if(self = [self init])
+	if((self = [self init]))
 	{
 		NSString* iconPath = [[NSBundle bundleForClass:[self class]] pathForResource:@"projectplus" ofType:@"tiff"];
 		icon = [[NSImage alloc] initByReferencingFile:iconPath];
