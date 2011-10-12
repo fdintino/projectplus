@@ -42,7 +42,7 @@
 	CWTMSplitView* splitView = [[CWTMSplitView alloc] initWithFrame:[documentView frame]];
 	{
 		[splitView setVertical:YES];
-		[splitView setDelegate:self];
+		[splitView setDelegate:(id <NSSplitViewDelegate>)self];
 		[splitView setSideBarOnRight:[SideBarSwitching sidebarOnRight]];
         [splitView setDividerStyle:NSSplitViewDividerStyleThin];
 
