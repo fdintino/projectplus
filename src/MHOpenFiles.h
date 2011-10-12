@@ -16,7 +16,7 @@
     NSTextView *editorView;
     id tabView;
 	NSInteger draggedIndex;
-	id *selectedItem;
+	id selectedItem;
 }
 
 + (id)objectForTabs:(id)theTabs;
