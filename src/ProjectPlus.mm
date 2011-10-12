@@ -15,7 +15,7 @@ float ToolbarHeightForWindow(NSWindow *window)
 	else return 0.0;
 }
 
-static const NSString* PROJECTPLUS_PREFERENCES_LABEL = @"Project+";
+static NSString* const PROJECTPLUS_PREFERENCES_LABEL = @"Project+";
 
 @implementation NSWindowController (PreferenceAdditions)
 - (NSArray*)ProjectPlus_toolbarAllowedItemIdentifiers:(id)sender

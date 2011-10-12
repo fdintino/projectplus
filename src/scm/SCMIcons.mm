@@ -6,7 +6,7 @@
 #define ICON_SIZE 		15
 #define BADGE_SIZE		10
 
-const NSString* overlayImageNames[] = {@"Modified", @"Added", @"Deleted", @"Versioned", @"Conflicted", @"Unversioned"};
+NSString* const overlayImageNames[] = {@"Modified", @"Added", @"Deleted", @"Versioned", @"Conflicted", @"Unversioned"};
 
 @interface SCMIcons (Private)
 - (void)reloadStatusesForAllProjects;
