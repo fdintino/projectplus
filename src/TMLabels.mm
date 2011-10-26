@@ -210,30 +210,6 @@ struct Colour {
 	return items;
 }
 
-- (BOOL)myValidateMenuItem:(id <NSMenuItem>)menuItem
-{
-	if ([menuItem action] == @selector(setColourLabel:)) {
-		NSArray *items = [self selectedItems];
-		unsigned int itemCount = [items count];
-
-		[menuItem setState:NSOffState];
-
-		for (unsigned int index = 0; index < itemCount; index += 1) {
-			NSDictionary *item = [items objectAtIndex:index];
-			NSString *path = [item objectForKey:@"filename"];
-			if (!path) path = [item objectForKey:@"sourceDirectory"];
-
-			if ([TMLabels colourIndexForPath:path] == [menuItem tag]) {
-				[menuItem setState:NSOnState];
-				break;
-			}
-		}
-		return YES;
-	}
-
-	return [self myValidateMenuItem:menuItem];
-}
-
 - (void)setColourLabel:(id)sender
 {
 	NSArray *items = [self selectedItems];
@@ -312,7 +288,6 @@ struct Colour {
 	[OakOutlineView jr_swizzleMethod:@selector(highlightSelectionInClipRect:) withMethod:@selector(labeledHighlightSelectionInClipRect:) error:NULL];
 
 	[OakMenuButton jr_swizzleMethod:@selector(awakeFromNib) withMethod:@selector(labeledAwakeFromNib) error:NULL];
-	[OakMenuButton jr_swizzleMethod:@selector(validateMenuItem:) withMethod:@selector(myValidateMenuItem:) error:NULL];
 	
 	[[ProjectPlus sharedInstance] watchDefaultsKey:@"ProjectPlus Labels Enabled"];
 }

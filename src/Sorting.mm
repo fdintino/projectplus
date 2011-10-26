@@ -181,13 +181,6 @@ NSInteger sort_items(id a, id b, void *context)
 	[sortingMenu release];
 }
 
-- (BOOL)ProjectPlus_Sorting_validateMenuItem: (NSMenuItem *) menuItem
-{
-	if([menuItem action] == @selector(toggleDescending:) || [menuItem action] == @selector(toggleByExtension:))
-		return YES;
-	
-	return [self ProjectPlus_Sorting_validateMenuItem:menuItem];
-}
 @end
 
 static NSMutableArray* sortDescriptors = [[NSMutableArray alloc] initWithCapacity:1];
@@ -199,7 +192,6 @@ static NSMutableArray* sortDescriptors = [[NSMutableArray alloc] initWithCapacit
 	
 	[OakProjectController jr_swizzleMethod:@selector(windowDidLoad) withMethod:@selector(ProjectPlus_Sorting_windowDidLoad) error:NULL];
 	[OakMenuButton jr_swizzleMethod:@selector(awakeFromNib) withMethod:@selector(ProjectPlus_Sorting_awakeFromNib) error:NULL];
-	[OakMenuButton jr_swizzleMethod:@selector(validateMenuItem:) withMethod:@selector(ProjectPlus_Sorting_validateMenuItem:) error:NULL];
 }
 
 + (BOOL)foldersOnTop

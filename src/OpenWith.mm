@@ -87,13 +87,7 @@
 	[[NSWorkspace sharedWorkspace] openFile:filePath withApplication:appPath];
 }
 
-- (BOOL)OpenWith_validateMenuItem: (NSMenuItem *) item
-{
-	if([item action] == @selector(openSelectedItemWith:))
-		return YES;
 
-	return NO;
-}
 @end
 
 static NSMutableDictionary* applicationBindings = [[NSMutableDictionary alloc] init];
@@ -102,7 +96,6 @@ static NSMutableDictionary* applicationBindings = [[NSMutableDictionary alloc] i
 + (void)load
 {
 	[OakMenuButton jr_swizzleMethod:@selector(awakeFromNib) withMethod:@selector(OpenWith_awakeFromNib) error:NULL];
-	[OakMenuButton jr_swizzleMethod:@selector(validateMenuItem:) withMethod:@selector(OpenWith_validateMenuItem:) error:NULL];
 }
 
 + (BOOL)useOpenWith
