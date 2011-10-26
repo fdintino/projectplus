@@ -1,8 +1,8 @@
 ProjectPlus Plugin for TextMate
 ###############################
 
-`Download ProjectPlus 1.53
-<https://github.com/downloads/fdintino/projectplus/ProjectPlus-1.53.tmplugin.zip>`_.
+`Download ProjectPlus 1.54
+<https://github.com/downloads/fdintino/projectplus/ProjectPlus-1.54.tmplugin.zip>`_.
 
 ProjectPlus is a plugin for TextMate which extends the functionality of
 project-related features. It offers an enhanced project drawer with the
