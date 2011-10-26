@@ -113,21 +113,6 @@
 	[self setSidebarIsClosed:close];
 }
 
-- (BOOL)SideBarSwitching_validateMenuItem: (NSMenuItem *) item;
-{
-	BOOL valid = [self SideBarSwitching_validateMenuItem:item];
-	
-	if(valid && [[[self window] contentView] isKindOfClass:[CWTMSplitView class]] && [item action] == @selector(toggleGroupsAndFilesDrawer:))
-	{
-		if([self sidebarIsClosed])
-			[item setTitle:@"Show Project Panel"];
-		else
-			[item setTitle:@"Hide Project Panel"];
-	}
-	
-	return valid;
-}
-
 - (float)splitView:(CWTMSplitView*)splitview constrainMinCoordinate:(float)proposedMin ofSubviewAt:(int)offset
 {
 	return (proposedMin + [splitview minLeftWidth]);
@@ -189,7 +174,6 @@
 	[OakProjectController jr_swizzleMethod:@selector(openProjectDrawer:) withMethod:@selector(SideBarSwitching_openProjectDrawer:) error:NULL];
 	[OakProjectController jr_swizzleMethod:@selector(toggleGroupsAndFilesDrawer:) withMethod:@selector(SideBarSwitching_toggleGroupsAndFilesDrawer:) error:NULL];
 	[OakProjectController jr_swizzleMethod:@selector(writeToFile:) withMethod:@selector(SideBarSwitching_writeToFile:) error:NULL];
-	[OakProjectController jr_swizzleMethod:@selector(validateMenuItem:) withMethod:@selector(SideBarSwitching_validateMenuItem:) error:NULL];
 }
 
 + (BOOL)useSidebar
