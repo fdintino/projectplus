@@ -30,6 +30,12 @@ Screenshot
 Release Notes
 =============
 
+Version 1.54
+------------
+
+- Fixed bug that caused frequent crashing of TextMate
+- Updated Unversioned bookmark SCM icon to match the style of the others
+
 Version 1.53
 ------------
 
