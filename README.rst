@@ -1,8 +1,8 @@
 ProjectPlus Plugin for TextMate
 ###############################
 
-`Download ProjectPlus 1.54
-<https://github.com/downloads/fdintino/projectplus/ProjectPlus-1.54.tmplugin.zip>`_.
+`Download ProjectPlus 1.54a
+<https://github.com/downloads/fdintino/projectplus/ProjectPlus-1.54a.tmplugin.zip>`_.
 
 ProjectPlus is a plugin for TextMate which extends the functionality of
 project-related features. It offers an enhanced project drawer with the
@@ -29,6 +29,11 @@ Screenshot
 
 Release Notes
 =============
+
+Version 1.54a
+-------------
+
+- Changed default of "Use workspace instead of tabs" to OFF
 
 Version 1.54
 ------------
