@@ -112,6 +112,12 @@ NSInteger sort_items(id a, id b, void *context)
 	[self resortItems];
 }
 
+- (void) ProjectPlus_Sorting_applicationDidBecomeActiveNotification:(NSNotification*)notification
+{
+	if([ProjectPlusSorting useSorting])
+		[self resortItems];
+}
+
 - (void)toggleDescending: (NSMenuItem *) menuItem
 {
 	[menuItem setState: ![menuItem state] ? NSOnState : NSOffState];
@@ -191,6 +197,8 @@ static NSMutableArray* sortDescriptors = [[NSMutableArray alloc] initWithCapacit
 	[[NSUserDefaults standardUserDefaults] registerDefaults:[NSDictionary dictionaryWithObject:[NSNumber numberWithBool:YES] forKey:@"ProjectPlus Use Sorting"]];
 	
 	[OakProjectController jr_swizzleMethod:@selector(windowDidLoad) withMethod:@selector(ProjectPlus_Sorting_windowDidLoad) error:NULL];
+	[OakProjectController jr_swizzleMethod:@selector(applicationDidBecomeActiveNotification:) withMethod:@selector(ProjectPlus_Sorting_applicationDidBecomeActiveNotification:) error:NULL];
+
 	[OakMenuButton jr_swizzleMethod:@selector(awakeFromNib) withMethod:@selector(ProjectPlus_Sorting_awakeFromNib) error:NULL];
 }
 
