@@ -82,4 +82,10 @@
 {
 	return [self sideBarOnRight] ? MIN_DRAWER_VIEW_WIDTH : MIN_DOCUMENT_VIEW_WIDTH;
 }
+
+- (NSColor*) dividerColor
+{
+	return [NSColor colorWithDeviceRed:0.6235 green:0.6235 blue:0.6235 alpha:1];
+}
+
 @end

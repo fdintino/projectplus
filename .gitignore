@@ -1,6 +1,6 @@
 build
-ProjectPlus.xcodeproj/xcuserdata/markhuot.*
-ProjectPlus.xcodeproj/project.xcworkspace/xcuserdata/markhuot.*
+ProjectPlus.xcodeproj/xcuserdata
+ProjectPlus.xcodeproj/project.xcworkspace/xcuserdata
 *.tmproj
 .DS_Store
 dsa_priv.pem
