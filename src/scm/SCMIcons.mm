@@ -460,7 +460,6 @@ static SCMIcons* SharedInstance;
 {
 	[self setScm:[[delegates objectAtIndex:rowIndex] scmName] isEnabled:[value boolValue]];
 	[self reloadStatusesForAllProjects];
-	[self redisplayProjectTrees];
 }
 
 // ===========
