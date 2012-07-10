@@ -229,7 +229,7 @@
 }
 - (void)ProjectTree_tabBarView:(id)arg1 didCloseTab:(id)tab
 {
-	[self ProjectTree_tabBarView:arg1 didOpenTab:tab];
+	[self ProjectTree_tabBarView:arg1 didCloseTab:tab];
     
     MHOpenFiles *openFilesClass = [MHOpenFiles objectForTabs:[self valueForKey:@"tabBarView"]];
     [openFilesClass removeFile:[tab identifier]];
