@@ -249,11 +249,11 @@
 @implementation ProjectTree
 + (void)load
 {
-	[[NSUserDefaults standardUserDefaults]
-     registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
+    [[NSUserDefaults standardUserDefaults]
+      registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
                        [NSNumber numberWithBool:YES], @"ProjectPlus Preserve Tree",
-                       [NSNumber numberWithBool:YES], @"ProjectPlus Workspace",
-                       nil]];
+                       [NSNumber numberWithBool:NO], @"ProjectPlus Workspace",
+                        nil]];
     
     [NSClassFromString(@"OakDocumentController") jr_swizzleMethod:@selector(windowDidLoad) withMethod:@selector(Document_windowDidLoad) error:NULL];
     
@@ -264,18 +264,15 @@
     // toggle workspace vs. tabs
     if ([ProjectTree useWorkspace])
     {
-        //[[NSUserDefaults standardUserDefaults] setBool:NO forKey:@"OakProjectWindowShowTabBarEnabled"];
-        //[[NSUserDefaults standardUserDefaults] synchronize];
         
         [NSClassFromString(@"OakProjectController") jr_swizzleMethod:@selector(tabBarView:didOpenTab:) withMethod:@selector(ProjectTree_tabBarView:didOpenTab:) error:NULL];
         [NSClassFromString(@"OakProjectController") jr_swizzleMethod:@selector(tabBarView:didCloseTab:) withMethod:@selector(ProjectTree_tabBarView:didCloseTab:) error:NULL];
         [NSClassFromString(@"OakProjectController") jr_swizzleMethod:@selector(tabBarView:didSelectTab:) withMethod:@selector(ProjectTree_tabBarView:didSelectTab:) error:NULL];
     }
-    
     else
     {
-        //[[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"OakProjectWindowShowTabBarEnabled"];
-        //[[NSUserDefaults standardUserDefaults] synchronize];
+        [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"OakProjectWindowShowTabBarEnabled"];
+        [[NSUserDefaults standardUserDefaults] synchronize];
     }
 }
 
