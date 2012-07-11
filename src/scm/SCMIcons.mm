@@ -9,7 +9,7 @@
 NSString* const overlayImageNames[] = {@"Modified", @"Added", @"Deleted", @"Versioned", @"Conflicted", @"Unversioned"};
 
 @interface SCMIcons (Private)
-- (void)reloadStatusesForAllProjects;
+- (void)reloadStatusesForAllProjects:(BOOL)reload;
 - (void)reloadStatusesForProject:(NSString*)projectPath;
 - (NSImage*)imageForStatusCode:(SCMIconsStatus)status;
 - (SCMIconsStatus)statusForPath:(NSString*)path inProject:(NSString*)projectPath reload:(BOOL)reload;
@@ -18,14 +18,13 @@ NSString* const overlayImageNames[] = {@"Modified", @"Added", @"Deleted", @"Vers
 @end
 
 @interface NSWindowController (SCMAppSwitching)
-- (void)scmRefreshApplicationDidBecomeActiveNotification:(id)sender;
+- (void)scmRefreshApplicationDidBecomeActiveNotification;
 @end
 
 @implementation NSWindowController (SCMAppSwitching)
-- (void)scmRefreshApplicationDidBecomeActiveNotification:(id)sender
+- (void)scmRefreshApplicationDidBecomeActiveNotification
 {
-	[[SCMIcons sharedInstance] reloadStatusesForAllProjects];
-	[self scmRefreshApplicationDidBecomeActiveNotification:sender];
+	[[SCMIcons sharedInstance] reloadStatusesForAllProjects:NO];
 }
 @end
 
@@ -198,27 +197,10 @@ static SCMIcons* SharedInstance;
 		[[NSUserDefaults standardUserDefaults] registerDefaults:[NSDictionary dictionaryWithObject:[NSNumber numberWithInt:0] forKey:@"SCMMateSelectedIconPack"]];
 
 		[NSClassFromString(@"OakOutlineView") jr_swizzleMethod:@selector(drawRect:) withMethod:@selector(scmDrawRect:) error:NULL];
-		[NSClassFromString(@"OakProjectController") jr_swizzleMethod:@selector(applicationDidBecomeActiveNotification:) withMethod:@selector(scmRefreshApplicationDidBecomeActiveNotification:) error:NULL];
-
-		// [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationDidBecomeActive:) name:NSApplicationDidBecomeActiveNotification object:nil];
 	}
 	return SharedInstance;
 }
 
-// - (void)applicationDidBecomeActive:(id)sender
-// {
-// 	NSLog(@"[%@ applicationDidBecomeActiveNotification:%@]", [self class], sender);
-// 	[[SCMIcons sharedInstance] reloadStatusesForAllProjects];
-//
-// 	NSArray* windows = [NSApp windows];
-//
-// 	for(int index = 0; index < [windows count]; index++)
-// 	{
-// 		NSWindow* window = [windows objectAtIndex:index];
-// 		if([window delegate] && [[window delegate] isKindOfClass:OakProjectController])
-// 			[[[window delegate] valueForKey:@"outlineView"] setNeedsDisplay:YES];
-// 	}
-// }
 - (NSOperationQueue*) operationQueue {
     return operationQueue;
 }
@@ -396,19 +378,22 @@ static SCMIcons* SharedInstance;
 }
 
 // Delegate notifications/requests
-- (void)reloadStatusesForAllProjects;
+- (void)reloadStatusesForAllProjects:(BOOL)reload;
 {
 	NSArray* windows = [NSApp windows];
 
 	for(int index = 0; index < [windows count]; index++)
 	{
 		NSWindow* window = [windows objectAtIndex:index];
-		if([window delegate] && [[window delegate] isKindOfClass:OakProjectController])
+		if([window delegate] && [[window delegate] isKindOfClass:NSClassFromString(@"OakProjectController")])
 		{
-			[self reloadStatusesForProject:[[window delegate] valueForKey:@"projectDirectory"]];
+			NSWindowController *controller = (NSWindowController*)[window delegate];
+			NSString *projectDirectory = [controller valueForKey:@"projectDirectory"];
+			[self reloadStatusesForProject:projectDirectory];
 		}
 	}
     [operationQueue waitUntilAllOperationsAreFinished];
+    if (reload == YES)
         [self redisplayProjectTrees];
 	
 }
@@ -466,8 +451,9 @@ static SCMIcons* SharedInstance;
 
 - (void)tableView:(NSTableView*)tableView setObjectValue:(id)value forTableColumn:(NSTableColumn*)tableColumn row:(int)rowIndex
 {
+	
 	[self setScm:[[delegates objectAtIndex:rowIndex] scmName] isEnabled:[value boolValue]];
-	[self reloadStatusesForAllProjects];
+	[self reloadStatusesForAllProjects:YES];
 }
 
 // ===========
