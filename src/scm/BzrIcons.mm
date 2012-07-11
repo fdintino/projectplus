@@ -188,7 +188,12 @@ static BzrIcons *SharedInstance;
 - (void)reloadStatusesForProject:(NSString*)projectPath;
 {
 #ifdef USE_THREADING
-	[NSThread detachNewThreadSelector:@selector(executeLsFilesForProject:) toTarget:self withObject:projectPath];
+    NSOperationQueue *operationQueue = [[SCMIcons sharedInstance] operationQueue];
+    NSInvocationOperation *operation = [[NSInvocationOperation alloc] initWithTarget:self
+                                                                            selector:@selector(executeLsFilesForProject:)
+                                                                              object:projectPath];
+    [operationQueue addOperation:operation];
+    [operation release];
 #else
 	[projectStatuses removeObjectForKey:projectPath];
 	[self executeLsFilesUnderPath:nil inProject:projectPath];

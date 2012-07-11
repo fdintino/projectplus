@@ -189,6 +189,8 @@ static SCMIcons* SharedInstance;
 		
 		delegates = [[NSMutableArray alloc] initWithCapacity:1];
 
+		operationQueue = [[NSOperationQueue alloc] init];
+
         [NSWindow jr_swizzleMethod:@selector(setRepresentedFilename:) withMethod:@selector(ProjectPlus_setRepresentedFilename:) error:NULL];
 
 		[self loadIconPacks];
@@ -217,6 +219,9 @@ static SCMIcons* SharedInstance;
 // 			[[[window delegate] valueForKey:@"outlineView"] setNeedsDisplay:YES];
 // 	}
 // }
+- (NSOperationQueue*) operationQueue {
+    return operationQueue;
+}
 
 - (BOOL)scmIsEnabled:(NSString*)scmName;
 {
@@ -249,6 +254,7 @@ static SCMIcons* SharedInstance;
 {
 	[delegates release];
 	[iconPacks release];
+    [operationQueue release];
 	[super dealloc];
 }
 
@@ -402,7 +408,9 @@ static SCMIcons* SharedInstance;
 			[self reloadStatusesForProject:[[window delegate] valueForKey:@"projectDirectory"]];
 		}
 	}
-	[self redisplayProjectTrees];
+    [operationQueue waitUntilAllOperationsAreFinished];
+        [self redisplayProjectTrees];
+	
 }
 
 - (void)reloadStatusesForProject:(NSString*)projectPath;

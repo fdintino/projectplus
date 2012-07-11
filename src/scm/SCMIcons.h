@@ -26,6 +26,7 @@ enum SCMIconsStatus {
 	NSMutableArray* delegates;
 	NSMutableArray* iconPacks;
 	IBOutlet NSArrayController* iconPacksController;
+	NSOperationQueue *operationQueue;
 }
 + (SCMIcons*)sharedInstance;
 
@@ -35,6 +36,7 @@ enum SCMIconsStatus {
 
 - (void)loadIconPacks;
 - (NSDictionary*)iconPack;
+- (NSOperationQueue*)operationQueue;
 - (NSImage*)overlayIcon:(NSString*)name;
 
 - (void)setSelectedIconPackIndex:(int)index;
