@@ -83,7 +83,7 @@
     NSOutlineView *fileBrowserOutlineView = [self valueForKey:@"outlineView"];
     [fileBrowserOutlineView setSelectionHighlightStyle:NSTableViewSelectionHighlightStyleSourceList];
     [fileBrowserOutlineView setRowHeight:15];
- 	[fileBrowserOutlineView setIntercellSpacing:NSMakeSize(3.0, 6.0)];
+	[fileBrowserOutlineView setIntercellSpacing:NSMakeSize(3.0, 2.0)];
     [fileBrowserOutlineView setAutoresizingMask:NSViewHeightSizable];
     
     // Update the Scroll View
