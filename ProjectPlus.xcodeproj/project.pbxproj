@@ -133,6 +133,7 @@
 		CB1A5EE312D79A2900F3C550 /* GitRoot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = GitRoot.png; sourceTree = "<group>"; };
 		CB1B5DAC134CD9F400B9088B /* GitAhead.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = GitAhead.png; sourceTree = "<group>"; };
 		CB1B5DAD134CD9F400B9088B /* GitBehind.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = GitBehind.png; sourceTree = "<group>"; };
+		D13726A315ABAEEE00BA73A9 /* Sorting.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Sorting.h; sourceTree = "<group>"; };
 		D2F7E65807B2D6F200F64583 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
 
@@ -256,6 +257,7 @@
 				915AD4D80ED9E6AD0017679A /* ProjectPlus.mm */,
 				915AD4DA0ED9E6AD0017679A /* ProjectTree.mm */,
 				915AD4EE0ED9E6AD0017679A /* Sorting.mm */,
+				D13726A315ABAEEE00BA73A9 /* Sorting.h */,
 				915AD4F00ED9E6AD0017679A /* TMLabels.mm */,
 				915AD4F10ED9E6AD0017679A /* Tooltips.mm */,
 			);

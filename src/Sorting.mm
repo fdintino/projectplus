@@ -1,24 +1,5 @@
 #import "TextMate.h"
-
-@interface ProjectPlusSorting : NSObject
-{
-}
-+ (BOOL)useSorting;
-+ (BOOL)descending;
-+ (BOOL)byExtension;
-+ (BOOL)foldersOnTop;
-
-+ (void)addProjectController:(id)projectController;
-+ (void)removeProjectController:(id)projectController;
-+ (NSMutableDictionary*)sortDescriptorForProjectController:(id)projectController;
-@end
-
-struct item_sort_descriptor
-{
-	BOOL ascending;
-	BOOL by_extension;
-	BOOL folders_on_top;
-};
+#import "Sorting.h"
 
 NSInteger sort_items(id a, id b, void *context)
 {
@@ -33,7 +14,7 @@ NSInteger sort_items(id a, id b, void *context)
 		BOOL bIsDir = [b objectForKey:@"children"] != nil;
 		
 		if(aIsDir && bIsDir)
-			ignoreExtensions = NO; // Fall through to name sorting but ignore extensions
+			ignoreExtensions = YES; // Fall through to name sorting but ignore extensions
 		else if(aIsDir)
 			return NSOrderedAscending;
 		else if(bIsDir)
@@ -52,17 +33,12 @@ NSInteger sort_items(id a, id b, void *context)
 	return result;
 }
 
-@interface NSMutableArray (RecursiveSort)
-- (void)recursiveSortItemsAscending:(BOOL)ascending
-                        byExtension:(BOOL)byExtension
-                       foldersOnTop:(BOOL)foldersOnTop;
-@end
-
 
 @implementation NSMutableArray (RecursiveSort)
-- (void)recursiveSortItemsAscending:(BOOL)ascending
-                        byExtension:(BOOL)byExtension
-                       foldersOnTop:(BOOL)foldersOnTop
+- (void)recursiveSortOutlineView:(NSOutlineView*)outlineView
+                       ascending:(BOOL)ascending
+                     byExtension:(BOOL)byExtension
+                    foldersOnTop:(BOOL)foldersOnTop
 {
 	struct item_sort_descriptor sortDescriptor;
 	sortDescriptor.ascending      = ascending;
@@ -74,9 +50,13 @@ NSInteger sort_items(id a, id b, void *context)
 	for(unsigned int index = 0; index < itemCount; index += 1)
 	{
 		id item = [self objectAtIndex:index];
-		
-		if([item objectForKey:@"children"])
-			[[item objectForKey:@"children"] recursiveSortItemsAscending:ascending byExtension:byExtension foldersOnTop:foldersOnTop];
+		NSMutableArray *children = [item objectForKey:@"children"];
+		if (children != nil && [outlineView isItemExpanded:item]) {
+			[children recursiveSortOutlineView:outlineView
+			                         ascending:ascending
+			                       byExtension:byExtension
+			                      foldersOnTop:foldersOnTop];
+		}
 	}
 
 	[self sortUsingFunction:sort_items context:&sortDescriptor];
@@ -89,13 +69,43 @@ NSInteger sort_items(id a, id b, void *context)
 	return [ProjectPlusSorting sortDescriptorForProjectController:self];
 }
 
+- (void)resortItems:(NSMutableArray*)items maintainItemSelection:(BOOL)maintainSelection
+{
+	NSOutlineView *outlineView = [self valueForKey:@"outlineView"];
+	NSMutableDictionary *sortDescriptor = [self sortDescriptor];
+
+    // In the case of adding and removing files, the selection in the outline
+    // view remains where the file originally appeared before sorting, so we
+    // need to track the currently selected item and set it back after sorting
+    // is complete.
+    NSArray *selectedItems;
+    NSUInteger selectedItemsCount;
+    if (maintainSelection) {
+        selectedItems = [outlineView performSelector:@selector(selectedItems)];
+        selectedItemsCount = [selectedItems count];        
+    }
+
+	[items recursiveSortOutlineView:outlineView
+	                      ascending:![[sortDescriptor objectForKey:@"descending"] boolValue]
+	                    byExtension: [[sortDescriptor objectForKey:@"byExtension"] boolValue]
+	                   foldersOnTop: [[sortDescriptor objectForKey:@"foldersOnTop"] boolValue]];
+
+	[outlineView performSelectorOnMainThread:@selector(reloadData)
+	                              withObject:nil
+	                           waitUntilDone:true];
+
+    // Re-select the originally selected item
+    if (maintainSelection && selectedItemsCount > 0) {
+        [outlineView performSelector:@selector(selectItems:)
+                          withObject:selectedItems
+                          afterDelay:0.0];
+    }
+}
+
 - (void)resortItems
 {
-	NSMutableArray* rootItems = [self valueForKey:@"rootItems"];
-	[rootItems recursiveSortItemsAscending:! [[[self sortDescriptor] objectForKey:@"descending"] boolValue]
-							   byExtension:[[[self sortDescriptor] objectForKey:@"byExtension"] boolValue]
-							  foldersOnTop:[[[self sortDescriptor] objectForKey:@"foldersOnTop"] boolValue]];
-	[[self valueForKey:@"outlineView"] reloadData];
+    NSMutableArray *rootItems = [self valueForKey:@"rootItems"];
+    [self resortItems:rootItems maintainItemSelection:NO];
 }
 
 - (void)ProjectPlus_Sorting_windowDidLoad
@@ -131,6 +141,132 @@ NSInteger sort_items(id a, id b, void *context)
 	[menuItem setState: ![menuItem state] ? NSOnState : NSOffState];
 	[[self sortDescriptor] setObject:[NSNumber numberWithBool:[menuItem state]] forKey:@"foldersOnTop"];
 	[self resortItems];
+}
+
+- (void)ProjectPlus_Sorting_insertItems:(NSArray*)itemsToInsert before:(NSDictionary*)beforeItem
+{
+    [self ProjectPlus_Sorting_insertItems:itemsToInsert before:beforeItem];
+
+    if ([itemsToInsert count] == 1) {
+        NSDictionary *item = [itemsToInsert objectAtIndex:0];
+        // If the item has the key children, then a folder has been inserted. In that case
+        // we can't select the item because it will unfocus the file rename view. We
+        // also don't need to, because the NSOutlineViewItemDidExpandNotification will get
+        // posted after the folder is created (the NSOutlineView auto expands new folders).
+        if ([item valueForKey:@"children"] != nil) {
+            return;
+        }
+    }
+
+    [self resortItems];
+
+    NSOutlineView *outlineView = [self valueForKey:@"outlineView"];
+    [outlineView performSelector:@selector(selectItems:)
+                      withObject:itemsToInsert
+                      afterDelay:0.0];
+}
+
+
+- (BOOL)ProjectPlus_Sorting_outlineView:(NSOutlineView*)outlineView
+                     acceptDrop:(id <NSDraggingInfo>)sender
+                           item:(NSDictionary*)dropItem
+                     childIndex:(int)index
+{
+    BOOL dropAllowed = [self ProjectPlus_Sorting_outlineView:outlineView
+                                          acceptDrop:sender
+                                                item:dropItem
+                                          childIndex:index];
+    if (dropAllowed == YES) {
+        [self resortItems];
+    }
+    return dropAllowed;
+}
+
+- (void)ProjectPlus_Sorting_outlineView:(NSOutlineView*)view
+                         setObjectValue:(NSString*)objectValue
+                         forTableColumn:(NSTableColumn*)tableColumn
+                                 byItem:(NSDictionary*)item
+{
+	[self ProjectPlus_Sorting_outlineView:view
+						   setObjectValue:objectValue
+						   forTableColumn:tableColumn
+								   byItem:item];
+    NSMutableArray *rootItems = [self valueForKey:@"rootItems"];
+    [self resortItems:rootItems maintainItemSelection:YES];     
+}
+
+- (void)ProjectPlus_Sorting_removeProjectFilesWarningDidEnd:(NSAlert*)alert
+                                                 returnCode:(int)returnCode
+                                                contextInfo:(void *)context
+{
+    [self ProjectPlus_Sorting_removeProjectFilesWarningDidEnd:alert
+                                                   returnCode:returnCode
+                                                  contextInfo:context];
+    if (returnCode == 1000) {
+        NSMutableArray *rootItems = [self valueForKey:@"rootItems"];
+        [self resortItems:rootItems maintainItemSelection:YES];        
+    }
+}
+@end
+
+
+// Hook into the NSOutlineViewItemDidExpandNotification notification
+// Needed because we now only sort NSOutlineView items which are not collapsed
+
+@implementation NSOutlineView (ProjectPlusOutlineView)
+
+-(id)ProjectPlus_Sorting_initWithCoder:(NSCoder*)coder
+{
+	id initOutlineView = [self ProjectPlus_Sorting_initWithCoder:coder];
+	NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
+
+	[nc addObserver:self
+	       selector:@selector(ProjectPlus_Sorting_outlineViewItemDidExpand:)
+	           name:NSOutlineViewItemDidExpandNotification
+	         object:(id)self];
+
+	return initOutlineView;
+}
+
+- (void)ProjectPlus_Sorting_outlineViewItemDidExpand:(NSNotification *)notification
+{
+	id item = [[notification userInfo] objectForKey:@"NSObject"];
+
+	BOOL ascending, byExtension, foldersOnTop;
+	
+	id delegate = [self delegate];
+	if ([delegate isKindOfClass:[NSWindowController class]]) {
+		NSMutableDictionary *sortDescriptor = [delegate sortDescriptor];
+		ascending    = ![[sortDescriptor objectForKey:@"descending"] boolValue];
+		byExtension  =  [[sortDescriptor objectForKey:@"byExtension"] boolValue];
+		foldersOnTop =  [[sortDescriptor objectForKey:@"foldersOnTop"] boolValue];
+	} else {
+		NSLog(@"Expected NSOutlineView delegate to be NSWindowController, instead got %@", [delegate className]);
+        return;
+	}
+
+	NSMutableArray *children = [item objectForKey:@"children"];
+
+    if ([children count] > 0) {
+        NSArray *selectedItems = [self performSelector:@selector(selectedItems)];
+        NSUInteger selectedItemsCount = [selectedItems count];
+        
+        [children recursiveSortOutlineView:self
+                                 ascending:ascending
+                               byExtension:byExtension
+                              foldersOnTop:foldersOnTop];
+
+        if (selectedItemsCount > 0) {
+            [self performSelector:@selector(selectItems:)
+                              withObject:selectedItems
+                              afterDelay:0.0];
+        } else {
+            [self performSelector:@selector(selectItem:)
+                     withObject:item
+                     afterDelay:0.0];
+            
+        }
+    }
 }
 @end
 
@@ -189,8 +325,32 @@ static NSMutableArray* sortDescriptors = [[NSMutableArray alloc] initWithCapacit
 + (void)load
 {
 	[[NSUserDefaults standardUserDefaults] registerDefaults:[NSDictionary dictionaryWithObject:[NSNumber numberWithBool:YES] forKey:@"ProjectPlus Use Sorting"]];
-	
-	[OakProjectController jr_swizzleMethod:@selector(windowDidLoad) withMethod:@selector(ProjectPlus_Sorting_windowDidLoad) error:NULL];
+
+	[OakProjectController jr_swizzleMethod:@selector(windowDidLoad)
+                                withMethod:@selector(ProjectPlus_Sorting_windowDidLoad)
+                                     error:NULL];
+
+	[OakOutlineView jr_swizzleMethod:@selector(initWithCoder:)
+						  withMethod:@selector(ProjectPlus_Sorting_initWithCoder:)
+							   error:NULL];
+
+	[OakProjectController jr_swizzleMethod:@selector(outlineView:setObjectValue:forTableColumn:byItem:)                                                                
+								withMethod:@selector(ProjectPlus_Sorting_outlineView:setObjectValue:forTableColumn:byItem:)
+									 error:NULL];
+    
+    [OakProjectController jr_swizzleMethod:@selector(removeProjectFilesWarningDidEnd:returnCode:contextInfo:)
+                                withMethod:@selector(ProjectPlus_Sorting_removeProjectFilesWarningDidEnd:returnCode:contextInfo:)
+                                     error:NULL];
+
+    [OakProjectController jr_swizzleMethod:@selector(insertItems:before:)
+                                withMethod:@selector(ProjectPlus_Sorting_insertItems:before:)
+                                     error:NULL];
+
+
+    [OakProjectController jr_swizzleMethod:@selector(outlineView:acceptDrop:item:childIndex:)
+                                withMethod:@selector(ProjectPlus_Sorting_outlineView:acceptDrop:item:childIndex:)
+                                     error:NULL];
+
 	[OakMenuButton jr_swizzleMethod:@selector(awakeFromNib) withMethod:@selector(ProjectPlus_Sorting_awakeFromNib) error:NULL];
 }
 
