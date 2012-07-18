@@ -94,8 +94,6 @@ static GitIcons *SharedInstance;
 		
 	int			projectStatus=SCMIconsStatusRoot;
 	
-	[fileStatuses retain];
-	[path retain];
 	@try
 	{
 		{
@@ -158,8 +156,6 @@ static GitIcons *SharedInstance;
 		
 		if(terminationStatus != 0)
 		{
-			[fileStatuses release];
-			[path release];
 			return;
 		}
 		
@@ -231,19 +227,13 @@ static GitIcons *SharedInstance;
 	// 
 	// [fileStatuses setObject:[NSNumber numberWithInt:SCMIconsStatusRoot] forKey:path];
 	[fileStatuses setObject:[NSNumber numberWithInt:projectStatus] forKey:path];
-	[path release];
-	[fileStatuses release];
 }
 
 - (void)executeLsFilesForProject:(NSString*)projectPath;
 {
 	NSAutoreleasePool* pool = [NSAutoreleasePool new];
-	[fileStatuses retain];
-	[projectPath retain];
 	[self executeLsFilesUnderPath:projectPath];
 	[self performSelectorOnMainThread:@selector(redisplayStatuses) withObject:nil waitUntilDone:NO];
-	[projectPath release];
-	[fileStatuses release];
 	[pool release];
 }
 
@@ -309,12 +299,12 @@ static GitIcons *SharedInstance;
 
 - (void)reloadStatusesForProject:(NSString*)projectPath
 {
-	[fileStatuses retain];
-	[projectPath retain];
-	// NSLog(@"reloadStatusesForProject, projectPath: %@",projectPath);
-	[NSThread detachNewThreadSelector:@selector(executeLsFilesForProject:) toTarget:self withObject:projectPath];
-	[projectPath release];
-	[fileStatuses release];
+    NSOperationQueue *operationQueue = [[SCMIcons sharedInstance] operationQueue];
+    NSInvocationOperation *operation = [[NSInvocationOperation alloc] initWithTarget:self
+                                                                            selector:@selector(executeLsFilesForProject:)
+                                                                               object:projectPath];
+    [operationQueue addOperation:operation];
+    [operation release];
 }
 
 @end

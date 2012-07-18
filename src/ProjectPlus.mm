@@ -71,13 +71,13 @@ static NSString* const PROJECTPLUS_PREFERENCES_LABEL = @"Project+";
 	
 	[[NSNotificationCenter defaultCenter]
 		addObserver:self
-		selector:@selector(ProjectPlus_Check_OutlineView_Bounds:)
+		selector:@selector(ProjectPlus_boundsChangeHandler:)
 		name:NSOutlineViewItemDidExpandNotification
 		object:nil
 	];
 	[[NSNotificationCenter defaultCenter]
 		addObserver:self
-		selector:@selector(ProjectPlus_Check_OutlineView_Bounds:)
+		selector:@selector(ProjectPlus_boundsChangeHandler:)
 		name:NSViewFrameDidChangeNotification
 		object:nil
 	];
@@ -85,31 +85,59 @@ static NSString* const PROJECTPLUS_PREFERENCES_LABEL = @"Project+";
 	return self;
 }
 
-- (void)ProjectPlus_Check_OutlineView_Bounds:(NSNotification*)notification {
+- (void)ProjectPlus_boundsChangeHandler:(NSNotification*)notification
+{
+    [self performSelectorOnMainThread:@selector(ProjectPlus_checkOutlineViewBounds)
+                                  withObject:nil
+                               waitUntilDone:NO];
+}
+
+- (void)ProjectPlus_checkOutlineViewBounds
+{
+    NSOutlineView *outlineView = (NSOutlineView*)[self valueForKey:@"outlineView"];
 	
-	NSOutlineView	*ov=(NSOutlineView*)[self valueForKey:@"outlineView"];
-	
-	NSRect	ovb=[ov bounds];
-	NSRect	svb=[[[ov enclosingScrollView]contentView]bounds];
+	NSRect ovb = [outlineView bounds];
+	NSRect svb = [[[outlineView enclosingScrollView] contentView] bounds];
 	
 	if(ovb.size.width!=svb.size.width)
 	{
 		ovb.size.width=svb.size.width;
 		
-		[ov setBoundsSize:ovb.size];
+		[outlineView setBoundsSize:ovb.size];
 		
-		[ov setColumnAutoresizingStyle:NSTableViewLastColumnOnlyAutoresizingStyle];
-		[ov sizeLastColumnToFit];
+		[outlineView setColumnAutoresizingStyle:NSTableViewLastColumnOnlyAutoresizingStyle];
+		[outlineView sizeLastColumnToFit];
 		
-		[ov setNeedsDisplay:YES];
+		[outlineView setNeedsDisplay:YES];
 	}
 }
 
 - (void)ProjectPlus_redrawRequired:(NSNotification*)notification
 {
-	NSOutlineView	*ov=(NSOutlineView*)[self valueForKey:@"outlineView"];
-	
-	[ov setNeedsDisplay:YES];
+	[self performSelectorOnMainThread:@selector(ProjectPlus_redisplay)
+                           withObject:nil
+                        waitUntilDone:NO];
+}
+
+- (void)ProjectPlus_redisplay
+{
+    NSOutlineView *outlineView = (NSOutlineView*)[self valueForKey:@"outlineView"];
+	[outlineView setNeedsDisplay:YES];
+    
+}
+
+-(void)ProjectPlus_applicationDidBecomeActiveNotification:(NSNotification *)notification {
+    [self ProjectPlus_applicationDidBecomeActiveNotification:notification];
+    if ([self respondsToSelector:@selector(scmRefreshApplicationDidBecomeActiveNotification)]) {
+        [self performSelectorOnMainThread:@selector(scmRefreshApplicationDidBecomeActiveNotification)
+                               withObject:nil
+                            waitUntilDone:NO];
+    }
+    
+	[self performSelectorOnMainThread:@selector(resortItems)
+						   withObject:nil
+	                    waitUntilDone:true];
+    [self ProjectPlus_redrawRequired:notification];
 }
 @end
 
@@ -146,7 +174,7 @@ static ProjectPlus* SharedInstance = nil;
 		[OakPreferencesManager jr_swizzleMethod:@selector(toolbarSelectableItemIdentifiers:) withMethod:@selector(ProjectPlus_toolbarSelectableItemIdentifiers:) error:NULL];
 		[OakPreferencesManager jr_swizzleMethod:@selector(toolbar:itemForItemIdentifier:willBeInsertedIntoToolbar:) withMethod:@selector(ProjectPlus_toolbar:itemForItemIdentifier:willBeInsertedIntoToolbar:) error:NULL];
 		[OakPreferencesManager jr_swizzleMethod:@selector(selectToolbarItem:) withMethod:@selector(ProjectPlus_selectToolbarItem:) error:NULL];
-
+		[OakProjectController jr_swizzleMethod:@selector(applicationDidBecomeActiveNotification:) withMethod:@selector(ProjectPlus_applicationDidBecomeActiveNotification:) error:NULL];
 		[OakProjectController jr_swizzleMethod:@selector(init) withMethod:@selector(ProjectPlus_init) error:NULL];
 	}
 
