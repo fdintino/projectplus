@@ -4,8 +4,8 @@
 
 @interface FossilIcons : NSObject <SCMIconDelegate>
 {
-	NSMutableDictionary* projectStatuses;
-	BOOL refreshingProject;
+    NSMutableDictionary* projectStatuses;
+    BOOL refreshingProject;
 }
 + (FossilIcons*)sharedInstance;
 @end
@@ -18,203 +18,194 @@ static FossilIcons *SharedInstance;
 // ==================
 + (FossilIcons*)sharedInstance
 {
-	return SharedInstance ?: [[self new] autorelease];
+    return SharedInstance ?: [[self new] autorelease];
 }
 
 + (void)load
 {
-	[[SCMIcons sharedInstance] registerSCMDelegate:[self sharedInstance]];
+    [[SCMIcons sharedInstance] registerSCMDelegate:[self sharedInstance]];
 }
 
 - (NSString*)scmName;
 {
-	return @"Fossil";
+    return @"Fossil";
 }
 
 - (id)init
 {
-	if(SharedInstance)
-	{
-		[self release];
-	}
-	else if(self = SharedInstance = [[super init] retain])
-	{
-		projectStatuses = [NSMutableDictionary new];
-	}
-	return SharedInstance;
+    if (SharedInstance) {
+        [self release];
+    } else if ((self = SharedInstance = [[super init] retain])) {
+        projectStatuses = [NSMutableDictionary new];
+    }
+    return SharedInstance;
 }
 
 - (void)dealloc
 {
-	[projectStatuses release];
-	[super dealloc];
+    [projectStatuses release];
+    [super dealloc];
 }
 
 - (NSString*)fossilPath;
 {
-	return [[SCMIcons sharedInstance] pathForVariable:@"TM_FOSSIL" paths:[NSArray arrayWithObjects:@"/opt/local/bin/fossil",@"/usr/local/bin/fossil",@"/usr/bin/fossil",nil]];
+    return [[SCMIcons sharedInstance] pathForVariable:@"TM_FOSSIL" paths:[NSArray arrayWithObjects:@"/opt/local/bin/fossil",@"/usr/local/bin/fossil",@"/usr/bin/fossil",nil]];
 }
 
 - (NSString *)localRootForProjectPath:(NSString*)projectPath
 {
   //local-root:   /Users/dmitry/.Trash/fossil-test/
-	NSString* exePath = [self fossilPath];
-	if(!exePath || ![[NSFileManager defaultManager] fileExistsAtPath:exePath])
-		return nil;
-
-  NSTask* task = [[NSTask new] autorelease];
-  [task setLaunchPath:exePath];
-  [task setCurrentDirectoryPath:projectPath];
-  [task setArguments:[NSArray arrayWithObjects:@"info", nil]];
-
-  NSPipe *pipe = [NSPipe pipe];
-  [task setStandardOutput: pipe];
-  [task setStandardError:[NSPipe pipe]];
-  
-  NSFileHandle *file = [pipe fileHandleForReading];
-  
-  [task launch];
-  
-  NSData *data = [file readDataToEndOfFile];
-  
-  [task waitUntilExit];
-  
-  if([task terminationStatus] != 0)
-  {
-    return nil;
-  }
-  
-  NSString *string             = [[[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding] autorelease];
-  NSArray* lines               = [string componentsSeparatedByString:@"\n"];
-  if([lines count] > 1)
-  {
-    for(int index = 0; index < [lines count]; index++)
-    {
-      NSString *line = [lines objectAtIndex:index];
-      NSArray *vars = [line componentsSeparatedByString:@":"];
-      if ([vars count] > 1) 
-      {
-        if ([[vars objectAtIndex:0] isEqualToString:@"local-root"]) 
-        {
-          return [[vars objectAtIndex:1] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
-        }
-      }
+    NSString* exePath = [self fossilPath];
+    if (!exePath || ![[NSFileManager defaultManager] fileExistsAtPath:exePath]) {
+        return nil;
     }
-  }
-  return nil;
+
+    NSTask* task = [[NSTask new] autorelease];
+    [task setLaunchPath:exePath];
+    [task setCurrentDirectoryPath:projectPath];
+    [task setArguments:[NSArray arrayWithObjects:@"info", nil]];
+
+    NSPipe *pipe = [NSPipe pipe];
+    [task setStandardOutput: pipe];
+    [task setStandardError:[NSPipe pipe]];
+
+    NSFileHandle *file = [pipe fileHandleForReading];
+
+    [task launch];
+
+    NSData *data = [file readDataToEndOfFile];
+
+    [task waitUntilExit];
+
+    if ([task terminationStatus] != 0) {
+        return nil;
+    }
+
+    NSString *string = [[[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding] autorelease];
+    NSArray* lines   = [string componentsSeparatedByString:@"\n"];
+    if ([lines count] > 1) {
+        for (int index = 0; index < [lines count]; index++) {
+            NSString *line = [lines objectAtIndex:index];
+            NSArray *vars = [line componentsSeparatedByString:@":"];
+            if ([vars count] > 1)  {
+                if ([[vars objectAtIndex:0] isEqualToString:@"local-root"])  {
+                    return [[vars objectAtIndex:1] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+                }
+            }
+        }
+    }
+    return nil;
 }
 
 - (void)executeLsFilesUnderPath:(NSString*)path inProject:(NSString*)projectPath;
 {
-	NSString* exePath = [self fossilPath];
-	if(!exePath || ![[NSFileManager defaultManager] fileExistsAtPath:exePath])
-		return;
-
-	@try
-	{
-    NSString *localRoot = [self localRootForProjectPath:projectPath];
-    if (!localRoot)
-    {
-			// Prevent repeated calling
-			[projectStatuses setObject:[NSDictionary dictionary] forKey:projectPath];
-			return;      
+    NSString* exePath = [self fossilPath];
+    if (!exePath || ![[NSFileManager defaultManager] fileExistsAtPath:exePath]) {
+        return;
     }
-		
-    NSTask* task = [[NSTask new] autorelease];
-		[task setLaunchPath:exePath];
-		[task setCurrentDirectoryPath:projectPath];
-    [task setArguments:[NSArray arrayWithObjects:@"ls", @"-l", nil]];
 
-		NSPipe *pipe = [NSPipe pipe];
-		[task setStandardOutput: pipe];
-		[task setStandardError:[NSPipe pipe]];
+    @try
+    {
+        NSString *localRoot = [self localRootForProjectPath:projectPath];
+        if (!localRoot) {
+            // Prevent repeated calling
+            [projectStatuses setObject:[NSDictionary dictionary] forKey:projectPath];
+            return;
+        }
 
-		NSFileHandle *file = [pipe fileHandleForReading];
+        NSTask* task = [[NSTask new] autorelease];
+        [task setLaunchPath:exePath];
+        [task setCurrentDirectoryPath:projectPath];
+        [task setArguments:[NSArray arrayWithObjects:@"ls", @"-l", nil]];
 
-		[task launch];
+        NSPipe *pipe = [NSPipe pipe];
+        [task setStandardOutput: pipe];
+        [task setStandardError:[NSPipe pipe]];
 
-		NSData *data = [file readDataToEndOfFile];
+        NSFileHandle *file = [pipe fileHandleForReading];
 
-		[task waitUntilExit];
+        [task launch];
 
-		if([task terminationStatus] != 0)
-		{
-			// Prevent repeated calling
-			[projectStatuses setObject:[NSDictionary dictionary] forKey:projectPath];
-			return;
-		}
+        NSData *data = [file readDataToEndOfFile];
 
-		NSString *string             = [[[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding] autorelease];
-		NSArray* lines               = [string componentsSeparatedByString:@"\n"];
-		NSMutableDictionary* project = [[NSMutableDictionary alloc] initWithCapacity:([lines count]>0) ? ([lines count]-1) : 0];
-		if([lines count] > 1)
-		{
-			for(int index = 0; index < [lines count]; index++)
-			{
-				NSString* line = [lines objectAtIndex:index];
-				if([line length] > 3)
-				{
-          long statusEndIndex = [line rangeOfCharacterFromSet:[NSCharacterSet whitespaceCharacterSet]].location;
-					NSString *statusString = [line substringToIndex:statusEndIndex];
-          NSString *filename = [localRoot stringByAppendingPathComponent:[[line substringFromIndex:statusEndIndex] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]]];
-          const char* statusChar = [[statusString substringToIndex:1] UTF8String];
-					SCMIconsStatus status = SCMIconsStatusUnknown;
-					switch(*statusChar)
-					{
-            case 'U': /* UNCHANGED */
-              status = SCMIconsStatusVersioned;
-              break;
-						case 'E': /* EDITED */
-            case 'R': /* RENAMED */
-              status = SCMIconsStatusModified;
-              break;
-						case 'A': /* ADDED */
-              status = SCMIconsStatusAdded;
-              break;
-						case 'D': /* DELETED */
-              status = SCMIconsStatusDeleted;
-              break;
-					}
-					[project setObject:[NSNumber numberWithInt:status] forKey:filename];
-				}
-			}
-		}
-		[projectStatuses setObject:project forKey:projectPath];
-		[project release];
-	}
-	@catch(NSException* exception)
-	{
-		NSLog(@"%s %@: launch path \"%@\"", _cmd, exception, exePath);
-		[projectStatuses setObject:[NSDictionary dictionary] forKey:projectPath];
-	}
+        [task waitUntilExit];
+
+        if ([task terminationStatus] != 0) {
+            // Prevent repeated calling
+            [projectStatuses setObject:[NSDictionary dictionary] forKey:projectPath];
+            return;
+        }
+
+        NSString *string = [[[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding] autorelease];
+        NSArray* lines   = [string componentsSeparatedByString:@"\n"];
+        NSMutableDictionary* project = [[NSMutableDictionary alloc] initWithCapacity:([lines count]>0) ? ([lines count]-1) : 0];
+
+        if ([lines count] > 1) {
+            for (int index = 0; index < [lines count]; index++) {
+                NSString* line = [lines objectAtIndex:index];
+                if ([line length] > 3) {
+                    long statusEndIndex = [line rangeOfCharacterFromSet:[NSCharacterSet whitespaceCharacterSet]].location;
+                    NSString *statusString = [line substringToIndex:statusEndIndex];
+                    NSString *filename = [localRoot stringByAppendingPathComponent:[[line substringFromIndex:statusEndIndex] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]]];
+                    const char* statusChar = [[statusString substringToIndex:1] UTF8String];
+                    SCMIconsStatus status = SCMIconsStatusUnknown;
+                    switch(*statusChar) {
+                        case 'U': /* UNCHANGED */
+                            status = SCMIconsStatusVersioned;
+                            break;
+                        case 'E': /* EDITED */
+                        case 'R': /* RENAMED */
+                            status = SCMIconsStatusModified;
+                            break;
+                        case 'A': /* ADDED */
+                            status = SCMIconsStatusAdded;
+                            break;
+                        case 'D': /* DELETED */
+                            status = SCMIconsStatusDeleted;
+                            break;
+                    }
+                    [project setObject:[NSNumber numberWithInt:status] forKey:filename];
+                }
+            }
+        }
+        [projectStatuses setObject:project forKey:projectPath];
+        [project release];
+    }
+    @catch(NSException* exception)
+    {
+        NSLog(@"%s %@: launch path \"%@\"", _cmd, exception, exePath);
+        [projectStatuses setObject:[NSDictionary dictionary] forKey:projectPath];
+    }
 }
 
 - (void)executeLsFilesForProject:(NSString*)projectPath;
 {
-	NSAutoreleasePool* pool = [NSAutoreleasePool new];
-	[self executeLsFilesUnderPath:nil inProject:projectPath];
-	[self performSelectorOnMainThread:@selector(redisplayStatuses) withObject:nil waitUntilDone:NO];
-	[pool release];
+    NSAutoreleasePool* pool = [NSAutoreleasePool new];
+    [self executeLsFilesUnderPath:nil inProject:projectPath];
+    [self performSelectorOnMainThread:@selector(redisplayStatuses) withObject:nil waitUntilDone:NO];
+    [pool release];
 }
 
 // SCMIconDelegate
 - (SCMIconsStatus)statusForPath:(NSString*)path inProject:(NSString*)projectPath reload:(BOOL)reload;
 {
-	if(reload || ![projectStatuses objectForKey:projectPath])
-		[self executeLsFilesUnderPath:path inProject:projectPath];
+    if (reload || ![projectStatuses objectForKey:projectPath]) {
+        [self executeLsFilesUnderPath:path inProject:projectPath];
+    }
 
-	NSNumber* status = [[projectStatuses objectForKey:projectPath] objectForKey:path];
-	if(status)
-		return (SCMIconsStatus)[status intValue];
-	else
-		return SCMIconsStatusUnknown;
+    NSNumber* status = [[projectStatuses objectForKey:projectPath] objectForKey:path];
+    if (status) {
+        return (SCMIconsStatus)[status intValue];
+    } else {
+        return SCMIconsStatusUnknown;
+    }
 }
 
 - (void)redisplayStatuses;
 {
-	refreshingProject = YES;
-	[[SCMIcons sharedInstance] redisplayProjectTrees];
-	refreshingProject = NO;
+    refreshingProject = YES;
+    [[SCMIcons sharedInstance] redisplayProjectTrees];
+    refreshingProject = NO;
 }
 
 - (void)reloadStatusesForProject:(NSString*)projectPath;
@@ -227,8 +218,8 @@ static FossilIcons *SharedInstance;
     [operationQueue addOperation:operation];
     [operation release];
 #else
-	[projectStatuses removeObjectForKey:projectPath];
-	[self executeLsFilesUnderPath:nil inProject:projectPath];
+    [projectStatuses removeObjectForKey:projectPath];
+    [self executeLsFilesUnderPath:nil inProject:projectPath];
 #endif
 }
 @end

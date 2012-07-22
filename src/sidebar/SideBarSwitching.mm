@@ -13,134 +13,136 @@
 @implementation NSWindowController (OakProjectController_SideBarSwitching)
 - (BOOL)sidebarIsClosed
 {
-	CWTMSplitView* splitView = [[self window] contentView];
-	return [splitView isSubviewCollapsed:[splitView drawerView]];
+    CWTMSplitView* splitView = [[self window] contentView];
+    return [splitView isSubviewCollapsed:[splitView drawerView]];
 }
 
 - (void)setSidebarIsClosed:(BOOL)closed
 {
-	CWTMSplitView* splitView = [[self window] contentView];
-	[splitView setSubview:[splitView drawerView] isCollapsed:closed];
-	[splitView resizeSubviewsWithOldSize:[splitView bounds].size];
+    CWTMSplitView* splitView = [[self window] contentView];
+    [splitView setSubview:[splitView drawerView] isCollapsed:closed];
+    [splitView resizeSubviewsWithOldSize:[splitView bounds].size];
 }
 
 - (void)SideBarSwitching_windowDidLoad
 {
-	[self SideBarSwitching_windowDidLoad];
-	
-	if(not [SideBarSwitching useSidebar])
-		return;
+    [self SideBarSwitching_windowDidLoad];
 
-	NSWindow* window     = [self window];
-	NSDrawer* drawer     = [[window drawers] objectAtIndex:0];
-	NSView* drawerView   = [[drawer contentView] retain];
-	NSView* documentView = [[window contentView] retain];
+    if (not [SideBarSwitching useSidebar]) {
+        return;
+    }
 
-	[drawer setContentView:nil];
-	[window setContentView:nil];
+    NSWindow* window     = [self window];
+    NSDrawer* drawer     = [[window drawers] objectAtIndex:0];
+    NSView* drawerView   = [[drawer contentView] retain];
+    NSView* documentView = [[window contentView] retain];
 
-	CWTMSplitView* splitView = [[CWTMSplitView alloc] initWithFrame:[documentView frame]];
-	{
-		[splitView setVertical:YES];
-		[splitView setDelegate:(id <NSSplitViewDelegate>)self];
-		[splitView setSideBarOnRight:[SideBarSwitching sidebarOnRight]];
+    [drawer setContentView:nil];
+    [window setContentView:nil];
+
+    CWTMSplitView* splitView = [[CWTMSplitView alloc] initWithFrame:[documentView frame]];
+    {
+        [splitView setVertical:YES];
+        [splitView setDelegate:(id <NSSplitViewDelegate>)self];
+        [splitView setSideBarOnRight:[SideBarSwitching sidebarOnRight]];
         [splitView setDividerStyle:NSSplitViewDividerStyleThin];
 
-		if(not [SideBarSwitching sidebarOnRight])
-			[splitView addSubview:drawerView];
-		[splitView addSubview:documentView];
-		if([SideBarSwitching sidebarOnRight])
-			[splitView addSubview:drawerView];
-		[window setContentView:splitView];
-	}
-    
-	[splitView release];
-	[documentView release];
-	[drawerView release];
-	
-	// Restoring from project
-	NSDictionary *project = [NSDictionary dictionaryWithContentsOfFile:[self valueForKey:@"filename"]];
-	if(project)
-	{
-		int sidebarWidth  = [[project objectForKey:@"fileHierarchyDrawerWidth"] intValue];
-		int documentWidth = [splitView bounds].size.width - [splitView dividerThickness] - sidebarWidth;
-		int height        = [splitView bounds].size.height;
-		[[splitView drawerView] setFrameSize:NSMakeSize(sidebarWidth, height)];
-		[[splitView documentView] setFrameSize:NSMakeSize(documentWidth, height)];
-		
-		BOOL closed = NO;
-		NSNumber* flag = [project objectForKey:@"showFileHierarchyPanel"];
-		if(flag)
-			closed = ! [flag boolValue];
-
-		[self setSidebarIsClosed:closed];
-    
-    // New/Temp Project
-	} else {
-        int sidebarWidth  = 250;
-		int documentWidth = [splitView bounds].size.width - [splitView dividerThickness] - sidebarWidth;
-		int height        = [splitView bounds].size.height;
-		[[splitView drawerView] setFrameSize:NSMakeSize(sidebarWidth, height)];
-		[[splitView documentView] setFrameSize:NSMakeSize(documentWidth, height)];
+        if (not [SideBarSwitching sidebarOnRight]) {
+            [splitView addSubview:drawerView];
+        }
+        [splitView addSubview:documentView];
+        if ([SideBarSwitching sidebarOnRight]) {
+            [splitView addSubview:drawerView];
+        }
+        [window setContentView:splitView];
     }
-	
-	[drawer close];
+
+    [splitView release];
+    [documentView release];
+    [drawerView release];
+
+    // Restoring from project
+    NSDictionary *project = [NSDictionary dictionaryWithContentsOfFile:[self valueForKey:@"filename"]];
+    if (project) {
+        int sidebarWidth  = [[project objectForKey:@"fileHierarchyDrawerWidth"] intValue];
+        int documentWidth = [splitView bounds].size.width - [splitView dividerThickness] - sidebarWidth;
+        int height        = [splitView bounds].size.height;
+        [[splitView drawerView] setFrameSize:NSMakeSize(sidebarWidth, height)];
+        [[splitView documentView] setFrameSize:NSMakeSize(documentWidth, height)];
+
+        BOOL closed = NO;
+        NSNumber* flag = [project objectForKey:@"showFileHierarchyPanel"];
+        if (flag) {
+            closed = ! [flag boolValue];
+        }
+
+        [self setSidebarIsClosed:closed];
+
+    // New/Temp Project
+    } else {
+        int sidebarWidth  = 250;
+        int documentWidth = [splitView bounds].size.width - [splitView dividerThickness] - sidebarWidth;
+        int height        = [splitView bounds].size.height;
+        [[splitView drawerView] setFrameSize:NSMakeSize(sidebarWidth, height)];
+        [[splitView documentView] setFrameSize:NSMakeSize(documentWidth, height)];
+    }
+
+    [drawer close];
 }
 
 - (void)SideBarSwitching_openProjectDrawer:(id)sender
 {
-	CWTMSplitView* splitView = [[self window] contentView];
-	if(not [splitView isKindOfClass:[CWTMSplitView class]])
-	{
-		[self SideBarSwitching_openProjectDrawer:sender];
-		return;
-	}
+    CWTMSplitView* splitView = [[self window] contentView];
+    if (not [splitView isKindOfClass:[CWTMSplitView class]]) {
+        [self SideBarSwitching_openProjectDrawer:sender];
+        return;
+    }
 
-	[self setSidebarIsClosed:NO];
+    [self setSidebarIsClosed:NO];
 }
 
 - (void)SideBarSwitching_toggleGroupsAndFilesDrawer:(id)sender
 {
-	CWTMSplitView* splitView = [[self window] contentView];
-	if(not [splitView isKindOfClass:[CWTMSplitView class]])
-	{
-		[self SideBarSwitching_toggleGroupsAndFilesDrawer:sender];
-		return;
-	}
+    CWTMSplitView* splitView = [[self window] contentView];
+    if (not [splitView isKindOfClass:[CWTMSplitView class]]) {
+        [self SideBarSwitching_toggleGroupsAndFilesDrawer:sender];
+        return;
+    }
 
-	BOOL close = ! [splitView isSubviewCollapsed:[splitView drawerView]];
-	
-	[self setSidebarIsClosed:close];
+    BOOL close = ! [splitView isSubviewCollapsed:[splitView drawerView]];
+
+    [self setSidebarIsClosed:close];
 }
 
 - (float)splitView:(CWTMSplitView*)splitview constrainMinCoordinate:(float)proposedMin ofSubviewAt:(int)offset
 {
-	return (proposedMin + [splitview minLeftWidth]);
+    return (proposedMin + [splitview minLeftWidth]);
 }
 
 - (float)splitView:(CWTMSplitView*)splitview constrainMaxCoordinate:(float)proposedMax ofSubviewAt:(int)offset
 {
-	return (proposedMax - [splitview minRightWidth]);
+    return (proposedMax - [splitview minRightWidth]);
 }
 
 
 - (void)splitView:(id)sender resizeSubviewsWithOldSize:(NSSize)oldSize
 {
-	if(![sender isKindOfClass:[CWTMSplitView class]])
-		return;
-	float newHeight = [sender frame].size.height;
-	float newWidth  = [sender frame].size.width - [[sender drawerView] frame].size.width - [sender dividerThickness];
+    if (![sender isKindOfClass:[CWTMSplitView class]]) {
+        return;
+    }
+    float newHeight = [sender frame].size.height;
+    float newWidth  = [sender frame].size.width - [[sender drawerView] frame].size.width - [sender dividerThickness];
 
-	NSRect newFrame = [[sender drawerView] frame];
-	newFrame.size.height = newHeight;
-	[[sender drawerView] setFrame:newFrame];
+    NSRect newFrame = [[sender drawerView] frame];
+    newFrame.size.height = newHeight;
+    [[sender drawerView] setFrame:newFrame];
 
-	newFrame = [[sender documentView] frame];
-	newFrame.size.width = newWidth;
-	newFrame.size.height = newHeight;
-	[[sender documentView] setFrame:newFrame];
-	
-	[sender adjustSubviews];
+    newFrame = [[sender documentView] frame];
+    newFrame.size.width = newWidth;
+    newFrame.size.height = newHeight;
+    [[sender documentView] setFrame:newFrame];
+
+    [sender adjustSubviews];
 }
 
 // ======================================
@@ -148,41 +150,51 @@
 // ======================================
 - (BOOL)SideBarSwitching_writeToFile:(NSString*)fileName
 {
-	BOOL result = [self SideBarSwitching_writeToFile:fileName];
-	if(result && [[[self window] contentView] isKindOfClass:[CWTMSplitView class]] && [SideBarSwitching useSidebar])
-	{
-		NSMutableDictionary *project = [NSMutableDictionary dictionaryWithContentsOfFile:fileName];
-		CWTMSplitView* splitView     = [[self window] contentView];
-		[project setObject:[NSNumber numberWithBool:! [self sidebarIsClosed]] forKey:@"showFileHierarchyPanel"];
-		[project setObject:[NSNumber numberWithInt:[[splitView drawerView] bounds].size.width] forKey:@"fileHierarchyDrawerWidth"];
-		result = [project writeToFile:fileName atomically:NO];
-	}
-	return result;
+    BOOL result = [self SideBarSwitching_writeToFile:fileName];
+    if (result && [[[self window] contentView] isKindOfClass:[CWTMSplitView class]] && [SideBarSwitching useSidebar]) {
+        NSMutableDictionary *project = [NSMutableDictionary dictionaryWithContentsOfFile:fileName];
+        CWTMSplitView* splitView     = [[self window] contentView];
+        [project setObject:[NSNumber numberWithBool:! [self sidebarIsClosed]] forKey:@"showFileHierarchyPanel"];
+        [project setObject:[NSNumber numberWithInt:[[splitView drawerView] bounds].size.width] forKey:@"fileHierarchyDrawerWidth"];
+        result = [project writeToFile:fileName atomically:NO];
+    }
+    return result;
 }
 @end
 
 @implementation SideBarSwitching
 + (void)load
 {
-	[[NSUserDefaults standardUserDefaults] registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
-			[NSNumber numberWithBool:YES],@"ProjectPlus Sidebar Enabled",
-			[NSNumber numberWithBool:NO], @"ProjectPlus Sidebar on Right",
+    [[NSUserDefaults standardUserDefaults] registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
+            [NSNumber numberWithBool:YES],@"ProjectPlus Sidebar Enabled",
+            [NSNumber numberWithBool:NO], @"ProjectPlus Sidebar on Right",
             [NSNumber numberWithBool:NO], @"ProjectPlus Workspace",
-			nil]];
+            nil]];
 
-	[OakProjectController jr_swizzleMethod:@selector(windowDidLoad) withMethod:@selector(SideBarSwitching_windowDidLoad) error:NULL];
-	[OakProjectController jr_swizzleMethod:@selector(openProjectDrawer:) withMethod:@selector(SideBarSwitching_openProjectDrawer:) error:NULL];
-	[OakProjectController jr_swizzleMethod:@selector(toggleGroupsAndFilesDrawer:) withMethod:@selector(SideBarSwitching_toggleGroupsAndFilesDrawer:) error:NULL];
-	[OakProjectController jr_swizzleMethod:@selector(writeToFile:) withMethod:@selector(SideBarSwitching_writeToFile:) error:NULL];
+    [OakProjectController jr_swizzleMethod:@selector(windowDidLoad)
+                                withMethod:@selector(SideBarSwitching_windowDidLoad)
+                                     error:NULL];
+
+    [OakProjectController jr_swizzleMethod:@selector(openProjectDrawer:)
+                                withMethod:@selector(SideBarSwitching_openProjectDrawer:)
+                                     error:NULL];
+
+    [OakProjectController jr_swizzleMethod:@selector(toggleGroupsAndFilesDrawer:)
+                                withMethod:@selector(SideBarSwitching_toggleGroupsAndFilesDrawer:)
+                                     error:NULL];
+
+    [OakProjectController jr_swizzleMethod:@selector(writeToFile:)
+                                withMethod:@selector(SideBarSwitching_writeToFile:)
+                                     error:NULL];
 }
 
 + (BOOL)useSidebar
 {
-	return [[NSUserDefaults standardUserDefaults] boolForKey:@"ProjectPlus Sidebar Enabled"];
+    return [[NSUserDefaults standardUserDefaults] boolForKey:@"ProjectPlus Sidebar Enabled"];
 }
 
 + (BOOL)sidebarOnRight
 {
-	return [[NSUserDefaults standardUserDefaults] boolForKey:@"ProjectPlus Sidebar on Right"];
+    return [[NSUserDefaults standardUserDefaults] boolForKey:@"ProjectPlus Sidebar on Right"];
 }
 @end

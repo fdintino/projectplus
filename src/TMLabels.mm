@@ -22,7 +22,7 @@ void Interpolate (void* info, CGFloat const* inData, CGFloat *outData)
    [cols[1] getComponents:&to[0]];
 
    float a = inData[0];
-   for(int i = 0; i < 4; i++)
+   for (int i = 0; i < 4; i++)
       outData[i] = (1.0f-a)*from[i] + a*to[i];
 }
 
@@ -99,293 +99,305 @@ void Interpolate (void* info, CGFloat const* inData, CGFloat *outData)
 @end
 
 
-#define LIST_OFFSET    5
-#define ICON_SIZE     15
+#define LIST_OFFSET  5
+#define ICON_SIZE    15
 
 #define DEFAULT_COLOUR_OPACITY 0.5
 
 struct Colour {
-	NSString *name;
-	NSColor *colour;
+    NSString *name;
+    NSColor  *colour;
 } colours[] = {
-	{@"None",	nil},
-	{@"Gray",	[NSColor grayColor]},
-	{@"Green",	[NSColor greenColor]},
-	{@"Purple",	[NSColor purpleColor]},
-	{@"Blue",	[NSColor blueColor]},
-	{@"Yellow",	[NSColor yellowColor]},
-	{@"Red",		[NSColor redColor]},
-	{@"Orange",	[NSColor orangeColor]},
+    {@"None",   nil},
+    {@"Gray",   [NSColor grayColor]},
+    {@"Green",  [NSColor greenColor]},
+    {@"Purple", [NSColor purpleColor]},
+    {@"Blue",   [NSColor blueColor]},
+    {@"Yellow", [NSColor yellowColor]},
+    {@"Red",    [NSColor redColor]},
+    {@"Orange", [NSColor orangeColor]},
 };
 
 @implementation NSOutlineView (LabeledOutlineView)
 - (void)drawLabelForRow:(int)rowNumber
 {
-	NSDictionary *item = [self itemAtRow:rowNumber];
-	if (item) {
-		NSString *path = [item objectForKey:@"filename"];
-		if (!path) path = [item objectForKey:@"sourceDirectory"];
+    NSDictionary *item = [self itemAtRow:rowNumber];
+    if (item) {
+        NSString *path = [item objectForKey:@"filename"];
+        if (!path) path = [item objectForKey:@"sourceDirectory"];
 
-		int labelColorIndex = [TMLabels colourIndexForPath:path];
-		if (labelColorIndex > 0) {
-			NSRect r = NSIntegralRect(NSInsetRect([self rectOfRow:rowNumber], 2.0f, 0.0f));
-			r.origin.y += 0.0f;
-			r.size.height -= 1.0f;
+        int labelColorIndex = [TMLabels colourIndexForPath:path];
+        if (labelColorIndex > 0) {
+            NSRect r = NSIntegralRect(NSInsetRect([self rectOfRow:rowNumber], 2.0f, 0.0f));
+            r.origin.y += 0.0f;
+            r.size.height -= 1.0f;
 
-			if([self isRowSelected:rowNumber])
-				r.size.width = 15.0f;
+            if ([self isRowSelected:rowNumber]) {
+                r.size.width = 15.0f;
+            }
 
-			[TMLabels drawLabelIndex:labelColorIndex inRect:r];
-		}
-	}
+            [TMLabels drawLabelIndex:labelColorIndex inRect:r];
+        }
+    }
 }
 
 - (void)drawSelectedLabelForRow:(int)rowNumber
 {
-	NSDictionary *item = [self itemAtRow:rowNumber];
-	if (item) {
-		NSString *path = [item objectForKey:@"filename"];
-		if (!path) path = [item objectForKey:@"sourceDirectory"];
+    NSDictionary *item = [self itemAtRow:rowNumber];
+    if (item) {
+        NSString *path = [item objectForKey:@"filename"];
+        if (!path) path = [item objectForKey:@"sourceDirectory"];
 
-		int labelColorIndex = [TMLabels colourIndexForPath:path];
-		if (labelColorIndex > 0) {
-			NSRect r = NSIntegralRect(NSInsetRect([self rectOfRow:rowNumber], 2.0f, 0.0f));
-			r.origin.y += 1.0f;
-			r.size.height = 12;
+        int labelColorIndex = [TMLabels colourIndexForPath:path];
+        if (labelColorIndex > 0) {
+            NSRect r = NSIntegralRect(NSInsetRect([self rectOfRow:rowNumber], 2.0f, 0.0f));
+            r.origin.y += 1.0f;
+            r.size.height = 12;
 
-			r.size.width = 15.0f;
+            r.size.width = 15.0f;
 
-			NSRect rect = [self rectOfRow:rowNumber];
-			rect.origin.x = LIST_OFFSET + [self levelForRow:rowNumber] * ICON_SIZE + 1;
-			rect.origin.y += 2;
-			rect.size.width  = 12;
-			rect.size.height = 12;
+            NSRect rect = [self rectOfRow:rowNumber];
+            rect.origin.x = LIST_OFFSET + [self levelForRow:rowNumber] * ICON_SIZE + 1;
+            rect.origin.y += 2;
+            rect.size.width  = 12;
+            rect.size.height = 12;
 
-			[TMLabels drawLabelIndex:labelColorIndex inRect:rect];
-		}
-	}
+            [TMLabels drawLabelIndex:labelColorIndex inRect:rect];
+        }
+    }
 }
 
 - (void)labeledHighlightSelectionInClipRect:(NSRect)clipRect
 {
-	if([TMLabels useLabels])
-	{
-		NSRange rows = [self rowsInRect:clipRect];
+    if ([TMLabels useLabels]) {
+        NSRange rows = [self rowsInRect:clipRect];
 
-		int rowNumber = rows.location;
-		while (rowNumber <= rows.location + rows.length)
-			[self drawLabelForRow:rowNumber++];
-	}
+        int rowNumber = rows.location;
+        while (rowNumber <= rows.location + rows.length) {
+            [self drawLabelForRow:rowNumber++];
+        }
+    }
 
-	[self labeledHighlightSelectionInClipRect:clipRect];
-	
-	if([TMLabels useLabels])
-	{
-		NSRange     visibleRowIndexes   = [self rowsInRect:clipRect];
-		NSIndexSet *selectedRowIndexes  = [self selectedRowIndexes];
-	
-		int row;
-		int endRow;
-	
-		for (row = visibleRowIndexes.location, endRow = row + visibleRowIndexes.length; row < endRow ; row++) {
-			if ([selectedRowIndexes containsIndex: row])
-				[self drawSelectedLabelForRow:row];
-		}
-	}
+    [self labeledHighlightSelectionInClipRect:clipRect];
+
+    if ([TMLabels useLabels]) {
+        NSRange     visibleRowIndexes   = [self rowsInRect:clipRect];
+        NSIndexSet *selectedRowIndexes  = [self selectedRowIndexes];
+
+        int row;
+        int endRow;
+
+        for (row = visibleRowIndexes.location, endRow = row + visibleRowIndexes.length; row < endRow ; row++) {
+            if ([selectedRowIndexes containsIndex: row]) {
+                [self drawSelectedLabelForRow:row];
+            }
+        }
+    }
 }
 @end
 
 @implementation NSButton (ProjectContextMenu)
 - (NSArray*)selectedItems
 {
-	NSOutlineView *outlineView = [self valueForKey:@"outlineView"];
-	NSIndexSet *selectedRows = [outlineView selectedRowIndexes];
-	NSMutableArray *items = [NSMutableArray arrayWithCapacity:[selectedRows count]];
+    NSOutlineView *outlineView = [self valueForKey:@"outlineView"];
+    NSIndexSet *selectedRows = [outlineView selectedRowIndexes];
+    NSMutableArray *items = [NSMutableArray arrayWithCapacity:[selectedRows count]];
 
-	int rowIndex = [selectedRows firstIndex];
-	do {
-		[items addObject:[outlineView itemAtRow:rowIndex]];
-	} while ((rowIndex = [selectedRows indexGreaterThanIndex:rowIndex]) != NSNotFound);
+    int rowIndex = [selectedRows firstIndex];
+    do {
+        [items addObject:[outlineView itemAtRow:rowIndex]];
+    } while ((rowIndex = [selectedRows indexGreaterThanIndex:rowIndex]) != NSNotFound);
 
-	return items;
+    return items;
 }
 
 - (void)setColourLabel:(id)sender
 {
-	NSArray *items = [self selectedItems];
-	unsigned int itemCount = [items count];
+    NSArray *items = [self selectedItems];
+    unsigned int itemCount = [items count];
 
-	for (unsigned int index = 0; index < itemCount; index += 1) {
-		NSDictionary *item = [items objectAtIndex:index];
-		NSString *path = [item objectForKey:@"filename"];
-		if (!path) path = [item objectForKey:@"sourceDirectory"];
+    for (unsigned int index = 0; index < itemCount; index += 1) {
+        NSDictionary *item = [items objectAtIndex:index];
+        NSString *path = [item objectForKey:@"filename"];
+        if (!path) path = [item objectForKey:@"sourceDirectory"];
 
-		if (path)
-			[TMLabels setColour:[sender tag] forPath:path];
-	}
-	
-	[[self valueForKey:@"outlineView"] display];
+        if (path) {
+            [TMLabels setColour:[sender tag] forPath:path];
+        }
+    }
+
+    [[self valueForKey:@"outlineView"] display];
 }
 
 - (void)labeledAwakeFromNib
 {
-	[self labeledAwakeFromNib];
-	
-	if(not [TMLabels useLabels])
-		return;
-	
-	if(not [[self window] isKindOfClass:NSClassFromString(@"NSDrawerWindow")])
-		return;
+    [self labeledAwakeFromNib];
 
-	NSMenu *menu = (NSMenu*)[self valueForKey:@"actionMenu"];
-	[menu addItem:[NSMenuItem separatorItem]];
+    if (not [TMLabels useLabels]) {
+        return;
+    }
 
-	NSMenuItem *colourMenu = [[NSMenuItem alloc] initWithTitle:@"Colour Label" action:nil keyEquivalent:@""];
-	{
-		NSMenu *colourSubMenu = [[NSMenu alloc] init];
+    if (not [[self window] isKindOfClass:NSClassFromString(@"NSDrawerWindow")]) {
+        return;
+    }
 
-		int colourCount = sizeof(colours) / sizeof(Colour);
-		for (int index = 0; index < colourCount; index++) {
-			Str255 str = { };
-			NSMenuItem *item = [[NSMenuItem alloc] initWithTitle: colours[index].name
-                                                       action:@selector(setColourLabel:)
-                                                keyEquivalent:@""];
-			[item setTarget:self];
-			[item setTag:index];
-			if (colours[index].colour) {
-				NSImage *image = [[NSImage alloc] initWithSize:NSMakeSize(32, 16)];
-				{
-					[image lockFocus];
-					[TMLabels drawLabelIndex:index inRect:NSMakeRect(0, 0, 32, 16)];
-					[image unlockFocus];
-					[item setImage:image];
-				}
-				[image release];
-			}
-			[colourSubMenu addItem:item];
-			[item release];
-		}
-	
-		[colourMenu setSubmenu:colourSubMenu];
-		[colourSubMenu release];
-	}
-	[menu addItem:colourMenu];
-	[colourMenu release];
+    NSMenu *menu = [self valueForKey:@"actionMenu"];
+    [menu addItem:[NSMenuItem separatorItem]];
+
+    NSMenuItem *colourMenu = [[NSMenuItem alloc] initWithTitle:@"Colour Label"
+                                                        action:nil
+                                                 keyEquivalent:@""];
+    {
+        NSMenu *colourSubMenu = [[NSMenu alloc] init];
+
+        int colourCount = sizeof(colours) / sizeof(Colour);
+        for (int index = 0; index < colourCount; index++) {
+            NSMenuItem *item = [[NSMenuItem alloc] initWithTitle:colours[index].name
+                                                          action:@selector(setColourLabel:)
+                                                   keyEquivalent:@""];
+            [item setTarget:self];
+            [item setTag:index];
+            if (colours[index].colour) {
+                NSImage *image = [[NSImage alloc] initWithSize:NSMakeSize(32, 16)];
+                {
+                    [image lockFocus];
+                    [TMLabels drawLabelIndex:index inRect:NSMakeRect(0, 0, 32, 16)];
+                    [image unlockFocus];
+                    [item setImage:image];
+                }
+                [image release];
+            }
+            [colourSubMenu addItem:item];
+            [item release];
+        }
+
+        [colourMenu setSubmenu:colourSubMenu];
+        [colourSubMenu release];
+    }
+    [menu addItem:colourMenu];
+    [colourMenu release];
 }
 @end
-
-
 
 
 @implementation TMLabels
 + (void)load
 {
-	[[NSUserDefaults standardUserDefaults] registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
-											[NSNumber numberWithFloat:DEFAULT_COLOUR_OPACITY],@"TMLabels Opacity",
-											[NSNumber numberWithBool:YES],@"ProjectPlus Labels Enabled",
-											nil]];
-	
-	[OakOutlineView jr_swizzleMethod:@selector(highlightSelectionInClipRect:) withMethod:@selector(labeledHighlightSelectionInClipRect:) error:NULL];
+    [[NSUserDefaults standardUserDefaults] registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
+                                           [NSNumber numberWithFloat:DEFAULT_COLOUR_OPACITY],@"TMLabels Opacity",
+                                           [NSNumber numberWithBool:YES],@"ProjectPlus Labels Enabled",
+                                           nil]];
 
-	[OakMenuButton jr_swizzleMethod:@selector(awakeFromNib) withMethod:@selector(labeledAwakeFromNib) error:NULL];
-	
-	[[ProjectPlus sharedInstance] watchDefaultsKey:@"ProjectPlus Labels Enabled"];
+    [OakOutlineView jr_swizzleMethod:@selector(highlightSelectionInClipRect:)
+                          withMethod:@selector(labeledHighlightSelectionInClipRect:)
+                               error:NULL];
+
+    [OakMenuButton jr_swizzleMethod:@selector(awakeFromNib)
+                         withMethod:@selector(labeledAwakeFromNib)
+                              error:NULL];
+
+    [[ProjectPlus sharedInstance] watchDefaultsKey:@"ProjectPlus Labels Enabled"];
 }
 
 + (int)colourIndexForPath:(NSString*)path
 {
-	OSStatus ret;
-	OSErr err;
-	FSRef ref;
-	FSCatalogInfo info;
-	UInt16 flags;
-	int colour;
+    OSStatus ret;
+    OSErr err;
+    FSRef ref;
+    FSCatalogInfo info;
+    UInt16 flags;
+    int colour;
 
-	ret = FSPathMakeRef ((UInt8*)[path UTF8String], &ref, NULL);
+    ret = FSPathMakeRef ((UInt8*)[path UTF8String], &ref, NULL);
 
-	if (ret != noErr)
-		return nil;
+    if (ret != noErr) {
+        return nil;
+    }
 
-	err = FSGetCatalogInfo (&ref, kFSCatInfoNodeFlags | kFSCatInfoFinderInfo, &info, NULL, NULL, NULL);
+    err = FSGetCatalogInfo (&ref, kFSCatInfoNodeFlags | kFSCatInfoFinderInfo, &info, NULL, NULL, NULL);
 
-	if (err != noErr)
-		return nil;
+    if (err != noErr) {
+        return nil;
+    }
 
-	if (info.nodeFlags & kFSNodeIsDirectoryMask) {
-		FolderInfo *pinfo = (FolderInfo*)&info.finderInfo;
+    if (info.nodeFlags & kFSNodeIsDirectoryMask) {
+        FolderInfo *pinfo = (FolderInfo*)&info.finderInfo;
 
-		flags = pinfo->finderFlags;
-	} else {
-		FileInfo *pinfo = (FileInfo*)&info.finderInfo;
+        flags = pinfo->finderFlags;
+    } else {
+        FileInfo *pinfo = (FileInfo*)&info.finderInfo;
 
-		flags = pinfo->finderFlags;
-	}
+        flags = pinfo->finderFlags;
+    }
 
-	colour = (flags & kColor) >> 1;
+    colour = (flags & kColor) >> 1;
 
-	return colour;
+    return colour;
 }
 
 + (NSColor*)colourForPath:(NSString*)path
 {
-	return colours[[self colourIndexForPath:path]].colour;
+    return colours[[self colourIndexForPath:path]].colour;
 }
 
 + (void)setColour:(int)colourIndex forPath:(NSString*)path
 {
-	OSStatus ret;
-	OSErr err;
-	FSRef ref;
-	FSCatalogInfo info;
+    OSStatus ret;
+    OSErr err;
+    FSRef ref;
+    FSCatalogInfo info;
 
-	ret = FSPathMakeRef ((UInt8*)[path UTF8String], &ref, NULL);
+    ret = FSPathMakeRef ((UInt8*)[path UTF8String], &ref, NULL);
 
-	if (ret != noErr)
-		return;
+    if (ret != noErr) {
+        return;
+    }
 
-	err = FSGetCatalogInfo (&ref, kFSCatInfoNodeFlags | kFSCatInfoFinderInfo, &info, NULL, NULL, NULL);
+    err = FSGetCatalogInfo (&ref, kFSCatInfoNodeFlags | kFSCatInfoFinderInfo, &info, NULL, NULL, NULL);
 
-	if (err != noErr)
-		return;
+    if (err != noErr) {
+        return;
+    }
 
-	if (info.nodeFlags & kFSNodeIsDirectoryMask) {
-		FolderInfo *pinfo = (FolderInfo*)&info.finderInfo;
+    if (info.nodeFlags & kFSNodeIsDirectoryMask) {
+        FolderInfo *pinfo = (FolderInfo*)&info.finderInfo;
 
-		pinfo->finderFlags = (pinfo->finderFlags & ~kColor) | (colourIndex << 1);
-	} else {
-		FileInfo *pinfo = (FileInfo*)&info.finderInfo;
+        pinfo->finderFlags = (pinfo->finderFlags & ~kColor) | (colourIndex << 1);
+    } else {
+        FileInfo *pinfo = (FileInfo*)&info.finderInfo;
 
-		pinfo->finderFlags = (pinfo->finderFlags & ~kColor) | (colourIndex << 1);
-	}
+        pinfo->finderFlags = (pinfo->finderFlags & ~kColor) | (colourIndex << 1);
+    }
 
-	FSSetCatalogInfo (&ref, kFSCatInfoFinderInfo, &info);
+    FSSetCatalogInfo (&ref, kFSCatInfoFinderInfo, &info);
 }
 
 + (float)labelOpacity
 {
-	float opacity = [[NSUserDefaults standardUserDefaults] floatForKey:@"TMLabels Opacity"];
-	
-	if (opacity == 0)
-		opacity = DEFAULT_COLOUR_OPACITY;
+    float opacity = [[NSUserDefaults standardUserDefaults] floatForKey:@"TMLabels Opacity"];
 
-	return opacity;
+    if (opacity == 0) {
+        opacity = DEFAULT_COLOUR_OPACITY;
+    }
+
+    return opacity;
 }
 
 + (BOOL)useLabels
 {
-	return [[NSUserDefaults standardUserDefaults] boolForKey:@"ProjectPlus Labels Enabled"];
+    return [[NSUserDefaults standardUserDefaults] boolForKey:@"ProjectPlus Labels Enabled"];
 }
 
 + (void)drawLabelIndex:(int)colourIndex inRect:(NSRect)rect
 {
-	// color names: Gray, Green, Purple, Blue, Yellow, Red, Orange
-	// static uint32_t const startCol[] = { 0xCFCFCF, 0xD4EE9C, 0xDDBDEA, 0xACD0FE, 0xF8F79C, 0xB2B2B2, 0xF9D194 };
-	static uint32_t const startCol[] = { 0xCFCFCF, 0xD4EE9C, 0xDDBDEA, 0xACD0FE, 0xF8F79C, 0xFFA09B, 0xF9D194 };
-	static uint32_t const stopCol[]  = { 0xA8A8A8, 0xAFDC49, 0xC186D7, 0x5B9CFE, 0xECDF4A, 0xFC605C, 0xF6AC46 };
+    // color names: Gray, Green, Purple, Blue, Yellow, Red, Orange
+    // static uint32_t const startCol[] = { 0xCFCFCF, 0xD4EE9C, 0xDDBDEA, 0xACD0FE, 0xF8F79C, 0xB2B2B2, 0xF9D194 };
+    static uint32_t const startCol[] = { 0xCFCFCF, 0xD4EE9C, 0xDDBDEA, 0xACD0FE, 0xF8F79C, 0xFFA09B, 0xF9D194 };
+    static uint32_t const stopCol[]  = { 0xA8A8A8, 0xAFDC49, 0xC186D7, 0x5B9CFE, 0xECDF4A, 0xFC605C, 0xF6AC46 };
 
-	NSBezierPath* path = [NSBezierPath bezierPathWithRoundRectInRect:rect radius:8.0f];
-	NSColor *from      = [[NSColor colorWithRRGGBB:startCol[colourIndex-1]] colorWithAlphaComponent:[TMLabels labelOpacity]];
-	NSColor *to        = [[NSColor colorWithRRGGBB:stopCol[colourIndex-1]] colorWithAlphaComponent:[TMLabels labelOpacity]];
-	[path fillWithGradientFrom:from to:to];
+    NSBezierPath *path = [NSBezierPath bezierPathWithRoundRectInRect:rect radius:8.0f];
+    NSColor *from = [[NSColor colorWithRRGGBB:startCol[colourIndex-1]] colorWithAlphaComponent:[TMLabels labelOpacity]];
+    NSColor *to   = [[NSColor colorWithRRGGBB:stopCol[colourIndex-1]] colorWithAlphaComponent:[TMLabels labelOpacity]];
+    [path fillWithGradientFrom:from to:to];
 }
 @end

@@ -17,7 +17,7 @@
     if (self) {
         // Initialization code here.
     }
-    
+
     return self;
 }
 
@@ -30,7 +30,7 @@
 {
     [[NSColor colorWithDeviceWhite:1.0 alpha:0.8] set];
     NSRectFillUsingOperation(NSMakeRect(0, 0, [self bounds].size.width, 1.0), NSCompositeSourceOver);
-    
+
     [[NSColor colorWithDeviceWhite:0.0 alpha:0.2] set];
     NSRectFillUsingOperation(NSMakeRect(0, 1.0, [self bounds].size.width, 1.0), NSCompositeSourceOver);
 }

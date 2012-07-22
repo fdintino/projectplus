@@ -9,13 +9,13 @@ extern NSString* ProjectPlus_redrawRequired;
 
 @interface ProjectPlus : NSObject
 {
-	NSImage* icon;
-	BOOL quickLookAvailable;
-	IBOutlet NSView *preferencesView;
-	IBOutlet NSTabView* preferencesTabView;
-	IBOutlet NSWindow* sortingDefaultsSheet;
+    NSImage* icon;
+    BOOL quickLookAvailable;
+    IBOutlet NSView *preferencesView;
+    IBOutlet NSTabView* preferencesTabView;
+    IBOutlet NSWindow* sortingDefaultsSheet;
 
-	IBOutlet SUUpdater* sparkleUpdater;
+    IBOutlet SUUpdater* sparkleUpdater;
 }
 + (ProjectPlus*)sharedInstance;
 - (id)initWithPlugInController:(id <TMPlugInController>)aController;

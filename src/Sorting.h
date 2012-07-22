@@ -2,9 +2,9 @@
 
 struct item_sort_descriptor
 {
-	BOOL ascending;
-	BOOL by_extension;
-	BOOL folders_on_top;
+    BOOL ascending;
+    BOOL by_extension;
+    BOOL folders_on_top;
 };
 
 @interface ProjectPlusSorting : NSObject
@@ -22,7 +22,7 @@ struct item_sort_descriptor
 
 @interface NSMutableArray (RecursiveSort)
 - (void)recursiveSortOutlineView:(NSOutlineView*)outlineView
-					    ascending:(BOOL)ascending
+                        ascending:(BOOL)ascending
                         byExtension:(BOOL)byExtension
                        foldersOnTop:(BOOL)foldersOnTop;
 @end

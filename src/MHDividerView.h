@@ -11,7 +11,7 @@
 
 @interface MHDividerView : NSView {
 @private
-    
+
 }
 
 @end

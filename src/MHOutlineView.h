@@ -11,9 +11,9 @@
 
 @interface MHOutlineView : NSOutlineView {
     NSTrackingRectTag trackingTag;
-	BOOL mouseOverView;
-	int mouseOverRow;
-	int lastOverRow;
+    BOOL mouseOverView;
+    int mouseOverRow;
+    int lastOverRow;
 }
 
 @end

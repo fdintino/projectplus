@@ -18,19 +18,17 @@ static NSMutableArray *objectList = NULL;
     if (!objectList) {
         objectList = [[NSMutableArray alloc] initWithCapacity:1];
     }
-    
+
     MHOpenFiles *item;
-    for (item in objectList)
-    {
-        if ([[item tabView] isEqualTo:theTabs])
-        {
+    for (item in objectList) {
+        if ([[item tabView] isEqualTo:theTabs]) {
             return item;
         }
     }
-    
+
     MHOpenFiles *obj = [[MHOpenFiles alloc] initForTabs:theTabs];
     [objectList addObject:obj];
-    
+
     return obj;
 }
 
@@ -41,7 +39,7 @@ static NSMutableArray *objectList = NULL;
         tabView = theTabs;
         openFiles = [[NSMutableArray alloc] initWithCapacity:1];
     }
-    
+
     return self;
 }
 
@@ -50,11 +48,11 @@ static NSMutableArray *objectList = NULL;
 - (void)setOutlineView:(NSOutlineView *)theOutlineView
 {
     outlineView = theOutlineView;
-	
+
 #if defined(MAC_OS_X_VERSION_10_7)
-	[outlineView setIndentationPerLevel:0.0];
+    [outlineView setIndentationPerLevel:0.0];
 #endif
-    
+
     [outlineView registerForDraggedTypes: [NSArray arrayWithObject:MyPrivateTableViewDataType]];
     [outlineView expandItem:[outlineView itemAtRow:0]];
 }
@@ -87,7 +85,7 @@ static NSMutableArray *objectList = NULL;
 - (void)addFile:(NSString *)path
 {
     [tabView setFrame:NSMakeRect(0, -1000, 100, 100)];
-    
+
     [openFiles addObject:path];
     [outlineView reloadData];
     [self resizeViews];
@@ -95,28 +93,26 @@ static NSMutableArray *objectList = NULL;
 
 - (void)removeFile:(NSString *)path
 {
-	selectedItem = [outlineView itemAtRow:[outlineView selectedRow]];
-	
+    selectedItem = [outlineView itemAtRow:[outlineView selectedRow]];
+
     [openFiles removeObject:path];
     [outlineView reloadData];
-	
-	[self selectFile:selectedItem];
-	
+
+    [self selectFile:selectedItem];
+
     [self resizeViews];
 }
 
 - (void)selectFile:(NSString *)path
 {
-	int len = [outlineView numberOfRows];
+    int len = [outlineView numberOfRows];
     int i = 0;
-    for (i; i<len; i++)
-    {
-		id rowPath = [outlineView itemAtRow:i];
-		if ([path isEqualToString:rowPath])
-        {
-			[outlineView selectRowIndexes:[NSIndexSet indexSetWithIndex:i] byExtendingSelection:NO];
-		}
-	}
+    for (i; i<len; i++) {
+        id rowPath = [outlineView itemAtRow:i];
+        if ([path isEqualToString:rowPath]) {
+            [outlineView selectRowIndexes:[NSIndexSet indexSetWithIndex:i] byExtendingSelection:NO];
+        }
+    }
 }
 
 - (NSInteger)outlineView:(NSOutlineView *)outlineView numberOfChildrenOfItem:(id)item
@@ -132,7 +128,7 @@ static NSMutableArray *objectList = NULL;
 
 
 - (id)outlineView:(NSOutlineView *)outlineView child:(NSInteger)index ofItem:(id)item {
-    
+
     return (item == nil) ? @"WORKSPACE" : [openFiles objectAtIndex:index];
 }
 
@@ -155,22 +151,18 @@ static NSMutableArray *objectList = NULL;
 
 - (void)outlineView:(MHOutlineView *)theOutlineView willDisplayCell:(id)cell forTableColumn:(NSTableColumn *)tableColumn item:(id)item
 {
-    
+
     //NSInteger rowIndex = [theOutlineView rowForItem:item];
-    
+
     //if ([theOutlineView mouseOverRow] == rowIndex) {
-	//	NSLog(@"%d could be highlighted", rowIndex);
+    //    NSLog(@"%d could be highlighted", rowIndex);
     //} else {
     //    NSLog(@"%d shouldn't be highlighted", rowIndex);
     //}
-    
-    if (item == @"WORKSPACE")
-    {
+
+    if (item == @"WORKSPACE") {
         [cell setImage:nil];
-    }
-    
-    else
-    {
+    } else {
         NSImage *icon = [[NSWorkspace sharedWorkspace] iconForFile:item];
         [icon setSize:NSMakeSize(16.0, 16.0)];
         [cell setImage:icon];
@@ -179,31 +171,31 @@ static NSMutableArray *objectList = NULL;
 
 - (void)outlineViewSelectionDidChange:(NSNotification *)notification
 {
-	// if we actually deselected everything by clicking outside the list then
-	// stop right here.
-	if ([outlineView selectedRow] == -1) {
-		return;
-	}
-	
-	// get object
-	id item = [outlineView itemAtRow:[outlineView selectedRow]];
+    // if we actually deselected everything by clicking outside the list then
+    // stop right here.
+    if ([outlineView selectedRow] == -1) {
+        return;
+    }
+
+    // get object
+    id item = [outlineView itemAtRow:[outlineView selectedRow]];
     [tabView selectTabWithIdentifier:item];
-    
+
     // deselect the file broswer
     [fileBrowserView deselectAll:self];
 }
 
 - (BOOL)outlineView:(NSOutlineView *)outlineView writeItems:(NSArray *)items toPasteboard:(NSPasteboard *)pasteboard
 {
-	for (id item in items) {
-		if ([item isEqualToString:@"WORKSPACE"]) {
-			continue;
-		}
-		
-		draggedIndex = [outlineView rowForItem:item]-1;
-		selectedItem = [outlineView itemAtRow:[outlineView selectedRow]];
-	}
-	
+    for (id item in items) {
+        if ([item isEqualToString:@"WORKSPACE"]) {
+            continue;
+        }
+
+        draggedIndex = [outlineView rowForItem:item]-1;
+        selectedItem = [outlineView itemAtRow:[outlineView selectedRow]];
+    }
+
     //NSData *data = [NSKeyedArchiver archivedDataWithRootObject:rowIndexes];
     [pasteboard declareTypes:[NSArray arrayWithObject:MyPrivateTableViewDataType] owner:self];
     //[pboard setData:data forType:MyPrivateTableViewDataType];
@@ -212,53 +204,51 @@ static NSMutableArray *objectList = NULL;
 
 - (NSDragOperation)outlineView:(NSOutlineView *)outlineView validateDrop:(id<NSDraggingInfo>)info proposedItem:(id)item proposedChildIndex:(NSInteger)index
 {
-    if (([item isEqualToString:@"WORKSPACE"] && index >= 0) || (item == nil && index == 1))
-    {
+    if (([item isEqualToString:@"WORKSPACE"] && index >= 0) || (item == nil && index == 1)) {
         return NSDragOperationMove;
     }
-    
+
     return NSDragOperationNone;
 }
 
 - (BOOL)outlineView:(NSOutlineView *)outlineView acceptDrop:(id<NSDraggingInfo>)info item:(id)item childIndex:(NSInteger)index
 {
-    if (item == nil && index == 1)
-    {
+    if (item == nil && index == 1) {
         index = [openFiles count];
     }
-    
-	id object = [openFiles objectAtIndex:draggedIndex];
-	
-	[openFiles removeObjectAtIndex:draggedIndex];
-	
-	if (draggedIndex < index)
-	{
-		index--;
-	}
-	
-	[openFiles insertObject:object atIndex:index];
 
-	
-	[outlineView reloadData];
-	
-	[self selectFile:selectedItem];
-	
+    id object = [openFiles objectAtIndex:draggedIndex];
+
+    [openFiles removeObjectAtIndex:draggedIndex];
+
+    if (draggedIndex < index) {
+        index--;
+    }
+
+    [openFiles insertObject:object atIndex:index];
+
+
+    [outlineView reloadData];
+
+    [self selectFile:selectedItem];
+
     return YES;
 }
 
 - (void)resizeViews
 {
     float neededHeight = ([outlineView numberOfRows] * [outlineView rowHeight]) + (6.0 * [outlineView numberOfRows]) + 2.0;
-    
-    NSView *openFilesCustomView = (NSView *)[[outlineView superview] superview];    
+
+    NSView *openFilesCustomView = (NSView *)[[outlineView superview] superview];
+
     NSView *drawerView = [openFilesCustomView superview];
     float y = [drawerView frame].size.height - neededHeight;
     float w = [openFilesCustomView frame].size.width;
-    
-	[[openFilesCustomView animator] setFrame:NSMakeRect(0.0, y, w, neededHeight)];
-    
+
+    [[openFilesCustomView animator] setFrame:NSMakeRect(0.0, y, w, neededHeight)];
+
     [[[[fileBrowserView superview] superview] animator] setFrame:NSMakeRect(0, 0, w, [drawerView frame].size.height - neededHeight - 2.0)];
-    
+
     [[dividerView animator] setFrameOrigin:NSMakePoint(0, [drawerView frame].size.height - neededHeight - 2.0)];
 }
 

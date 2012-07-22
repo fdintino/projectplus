@@ -2,9 +2,9 @@
 #import "ProjectPlus.h"
 #import "TextMate.h"
 
-#define LIST_OFFSET 		4
-#define ICON_SIZE 		15
-#define BADGE_SIZE		10
+#define LIST_OFFSET  4
+#define ICON_SIZE    15
+#define BADGE_SIZE   10
 
 NSString* const overlayImageNames[] = {@"Modified", @"Added", @"Deleted", @"Versioned", @"Conflicted", @"Unversioned"};
 
@@ -24,83 +24,101 @@ NSString* const overlayImageNames[] = {@"Modified", @"Added", @"Deleted", @"Vers
 @implementation NSWindowController (SCMAppSwitching)
 - (void)scmRefreshApplicationDidBecomeActiveNotification
 {
-	[[SCMIcons sharedInstance] reloadStatusesForAllProjects:NO];
+    [[SCMIcons sharedInstance] reloadStatusesForAllProjects:NO];
 }
 @end
 
 @implementation NSOutlineView (SCMOutlineView)
 
 - (void)drawOverlay:(NSString *)overlayName
-	forScmNamed:(NSString *)scmName
-	inRect:(NSRect)iconRect
-	flip:(BOOL)flip
+        forScmNamed:(NSString *)scmName
+             inRect:(NSRect)iconRect
+               flip:(BOOL)flip
 {
-	
-	NSImage	*image=[[SCMIcons sharedInstance]projectIconNamed:overlayName forScmNamed:scmName];
-	
-	if(image)
-	{
-		if(flip) [image setFlipped:YES];
-		[image drawInRect:iconRect
+
+    NSImage *image = [[SCMIcons sharedInstance]projectIconNamed:overlayName
+                                                    forScmNamed:scmName];
+
+    if (image) {
+        if (flip) {
+            [image setFlipped:YES];
+        }
+        [image drawInRect:iconRect
                 fromRect:NSZeroRect
                operation:NSCompositeSourceOver
                 fraction:1];
-		if(flip) [image setFlipped:NO];
-	}
+        if (flip) {
+            [image setFlipped:NO];
+        }
+    }
 }
 
 - (void)drawOverlayForRow:(int)rowNumber inProject:(NSString*)projectPath;
 {
-	NSDictionary* item = [self itemAtRow:rowNumber];
+    NSDictionary* item = [self itemAtRow:rowNumber];
 
-	if (item) {
-		NSString* scmName=nil;
-		NSString* path        = [item objectForKey:@"filename"];
-		if (!path) path       = [item objectForKey:@"sourceDirectory"];
-		SCMIconsStatus status = [[SCMIcons sharedInstance] statusForPath:path inProject:projectPath reload:NO scmName:&scmName];
-		
-		NSImage* overlay = [[SCMIcons sharedInstance] imageForStatusCode:status];
-		if (overlay)
-		{
-			// NSAffineTransform* transform = [NSAffineTransform transform];
-			// [transform rotateByDegrees:180];
-			// [transform concat];
-			[overlay setFlipped:YES];
-			[overlay drawInRect:NSMakeRect(LIST_OFFSET + ([self levelForRow:rowNumber] + 1) * [self indentationPerLevel],
-													rowNumber * ([self rowHeight] + [self intercellSpacing].height),
-													ICON_SIZE, ICON_SIZE)
+    if (item) {
+        NSString *scmName = nil;
+        NSString *path = [item objectForKey:@"filename"];
+        if (!path) {
+            path = [item objectForKey:@"sourceDirectory"];
+        }
+        SCMIconsStatus status = [[SCMIcons sharedInstance] statusForPath:path
+                                                               inProject:projectPath
+                                                                  reload:NO
+                                                                 scmName:&scmName];
+
+        NSImage* overlay = [[SCMIcons sharedInstance] imageForStatusCode:status];
+        if (overlay) {
+            [overlay setFlipped:YES];
+            [overlay drawInRect:NSMakeRect(LIST_OFFSET + ([self levelForRow:rowNumber] + 1) * [self indentationPerLevel],
+                                                    rowNumber * ([self rowHeight] + [self intercellSpacing].height),
+                                                    ICON_SIZE, ICON_SIZE)
                     fromRect:NSZeroRect
                    operation:NSCompositeSourceOver
                     fraction:1];
-			[overlay setFlipped:NO];
-		}
-		
-		if(status&SCMIconsStatusRoot && scmName)
-		{
-			NSRect	iconRect=NSMakeRect(
-				LIST_OFFSET + ([self levelForRow:rowNumber] + 1) * [self indentationPerLevel],
-				rowNumber * ([self rowHeight] + [self intercellSpacing].height),
-				ICON_SIZE,
-				ICON_SIZE
-			);
-			
-			[self drawOverlay:@"Root" forScmNamed:scmName inRect:iconRect flip:YES];
-			
-			if(status&SCMIconsStatusAhead) [self drawOverlay:@"Ahead" forScmNamed:scmName inRect:iconRect flip:YES];
-			if(status&SCMIconsStatusBehind) [self drawOverlay:@"Behind" forScmNamed:scmName inRect:iconRect flip:YES];
-		}
-	}
+            [overlay setFlipped:NO];
+        }
+
+        if ((status & SCMIconsStatusRoot) && scmName) {
+            NSRect iconRect = NSMakeRect(
+                LIST_OFFSET + ([self levelForRow:rowNumber] + 1) * [self indentationPerLevel],
+                rowNumber * ([self rowHeight] + [self intercellSpacing].height),
+                ICON_SIZE,
+                ICON_SIZE
+            );
+
+            [self drawOverlay:@"Root"
+                  forScmNamed:scmName
+                       inRect:iconRect
+                         flip:YES];
+
+            if (status & SCMIconsStatusAhead) {
+                [self drawOverlay:@"Ahead"
+                      forScmNamed:scmName
+                           inRect:iconRect
+                             flip:YES];
+            }
+            if (status & SCMIconsStatusBehind) {
+                [self drawOverlay:@"Behind"
+                      forScmNamed:scmName 
+                        inRect:iconRect
+                             flip:YES];
+            }
+        }
+    }
 }
 
 - (void)scmDrawRect:(NSRect)rect
 {
-	[self scmDrawRect:rect];
+    [self scmDrawRect:rect];
 
-	NSString* projectPath = [[self delegate] performSelector:@selector(findProjectDirectory)];
-	NSRange rows          = [self rowsInRect:rect];
-	int rowNumber         = rows.location;
-	while (rowNumber <= rows.location + rows.length)
-		[self drawOverlayForRow:rowNumber++ inProject:projectPath];
+    NSString* projectPath = [[self delegate] performSelector:@selector(findProjectDirectory)];
+    NSRange rows          = [self rowsInRect:rect];
+    int rowNumber         = rows.location;
+    while (rowNumber <= rows.location + rows.length) {
+        [self drawOverlayForRow:rowNumber++ inProject:projectPath];
+    }
 }
 @end
 
@@ -110,371 +128,399 @@ NSString* const overlayImageNames[] = {@"Modified", @"Added", @"Deleted", @"Vers
              inRect:(NSRect)iconRect
                flip:(BOOL)flip
 {
-	
-	NSImage	*image=[[SCMIcons sharedInstance]projectIconNamed:overlayName forScmNamed:scmName];
-	
-	if(image)
-	{
-		if(flip) [image setFlipped:YES];
-		[image drawInRect:iconRect
+
+    NSImage *image = [[SCMIcons sharedInstance]projectIconNamed:overlayName forScmNamed:scmName];
+
+    if (image) {
+        if (flip) {
+            [image setFlipped:YES];
+        }
+        [image drawInRect:iconRect
                  fromRect:NSZeroRect
                 operation:NSCompositeSourceOver
                  fraction:1];
-		if(flip) [image setFlipped:NO];
-	}
+        if (flip) {
+            [image setFlipped:NO];
+        }
+    }
 }
+
 // called when the user switches tabs (or load files)
 - (void)ProjectPlus_setRepresentedFilename:(NSString*)path
 {
-	[self ProjectPlus_setRepresentedFilename:path];
+    [self ProjectPlus_setRepresentedFilename:path];
 
-	if([[self delegate] isKindOfClass:OakProjectController])
-	{
-		NSString* scmName=nil;
-		NSString* projectPath = [[self delegate] valueForKey:@"projectDirectory"];
+    if ([[self delegate] isKindOfClass:OakProjectController]) {
+        NSWindowController *delegate = (NSWindowController*)[self delegate];
+        NSString* scmName = nil;
 
-		SCMIconsStatus status = [[SCMIcons sharedInstance] statusForPath:path inProject:projectPath reload:YES scmName:&scmName];
-		NSImage* overlay      = [[SCMIcons sharedInstance] imageForStatusCode:status];
+        SCMIcons *instance = [SCMIcons sharedInstance];
 
-		NSImage* icon = [[[self standardWindowButton:NSWindowDocumentIconButton] image] copy];
-		[icon lockFocus];
+        SCMIconsStatus status = [instance statusForPath:path
+                                              inProject:[delegate valueForKey:@"projectDirectory"]
+                                                 reload:YES
+                                                scmName:&scmName];
 
-		[overlay drawInRect:NSMakeRect(0, 0, [icon size].width, [icon size].height)
-	              fromRect:NSZeroRect
-	             operation:NSCompositeSourceOver
-	              fraction:1];
-		
-		if(status&SCMIconsStatusRoot && scmName)
-		{
-			NSRect	iconRect=NSMakeRect(0, 0, [icon size].width, [icon size].height);
-			
-			[self drawOverlay:@"Root" forScmNamed:scmName inRect:iconRect flip:NO];
+        NSImage* icon = [[[self standardWindowButton:NSWindowDocumentIconButton] image] copy];
+        [icon lockFocus];
 
-			if(status&SCMIconsStatusAhead) [self drawOverlay:@"Ahead" forScmNamed:scmName inRect:iconRect flip:NO];
-			if(status&SCMIconsStatusBehind) [self drawOverlay:@"Behind" forScmNamed:scmName inRect:iconRect flip:NO];
-		}
-		
-		[icon unlockFocus];
+        NSRect iconRect = NSMakeRect(0.0, 0.0, [icon size].width, [icon size].height);
 
-		[[self standardWindowButton:NSWindowDocumentIconButton] setImage:icon];
-		[icon release];
-		
-		// Update the tree as well, file status may have changed
-		[[SCMIcons sharedInstance] redisplayProjectTrees];
-	}
+        NSImage* overlay = [instance imageForStatusCode:status];
+        [overlay drawInRect:iconRect fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1];
+
+        if (status & SCMIconsStatusRoot && scmName) {
+
+            [self drawOverlay:@"Root" forScmNamed:scmName inRect:iconRect flip:NO];
+
+            if (status & SCMIconsStatusAhead) {
+                [self drawOverlay:@"Ahead" forScmNamed:scmName inRect:iconRect flip:NO];
+            }
+            if (status & SCMIconsStatusBehind) {
+                [self drawOverlay:@"Behind" forScmNamed:scmName inRect:iconRect flip:NO];
+            }
+        }
+
+        [icon unlockFocus];
+
+        [[self standardWindowButton:NSWindowDocumentIconButton] setImage:icon];
+        [icon release];
+
+        // Update the tree as well, file status may have changed
+        [instance redisplayProjectTrees];
+    }
 }
 @end
 
 static SCMIcons* SharedInstance;
 
 @implementation SCMIcons
-// ==================
-// = Setup/Teardown =
-// ==================
+
+# pragma mark Setup / Teardown
+
 + (SCMIcons*)sharedInstance
 {
-	return SharedInstance ?: [[self new] autorelease];
+    return SharedInstance ?: [[self new] autorelease];
 }
 
 - (id)init
 {
-	if(SharedInstance)
-	{
-		[self release];
-	}
-	else if((self = SharedInstance = [[super init] retain]))
-	{
-		NSApp = [NSApplication sharedApplication];
-		
-		delegates = [[NSMutableArray alloc] initWithCapacity:1];
+    if (SharedInstance) {
+        [self release];
+    } else if ((self = SharedInstance = [[super init] retain])) {
+        NSApp = [NSApplication sharedApplication];
 
-		operationQueue = [[NSOperationQueue alloc] init];
+        delegates = [[NSMutableArray alloc] initWithCapacity:1];
 
-        [NSWindow jr_swizzleMethod:@selector(setRepresentedFilename:) withMethod:@selector(ProjectPlus_setRepresentedFilename:) error:NULL];
+        operationQueue = [[NSOperationQueue alloc] init];
 
-		[self loadIconPacks];
+        [NSWindow jr_swizzleMethod:@selector(setRepresentedFilename:)
+                        withMethod:@selector(ProjectPlus_setRepresentedFilename:)
+                             error:NULL];
 
-		[[NSUserDefaults standardUserDefaults] registerDefaults:[NSDictionary dictionaryWithObject:[NSNumber numberWithInt:0] forKey:@"SCMMateSelectedIconPack"]];
+        [self loadIconPacks];
 
-		[NSClassFromString(@"OakOutlineView") jr_swizzleMethod:@selector(drawRect:) withMethod:@selector(scmDrawRect:) error:NULL];
-	}
-	return SharedInstance;
+        [[NSUserDefaults standardUserDefaults] registerDefaults:[NSDictionary dictionaryWithObject:[NSNumber numberWithInt:0] forKey:@"SCMMateSelectedIconPack"]];
+
+        [NSClassFromString(@"OakOutlineView") jr_swizzleMethod:@selector(drawRect:)
+                                                    withMethod:@selector(scmDrawRect:)
+                                                         error:NULL];
+    }
+    return SharedInstance;
 }
 
-- (NSOperationQueue*) operationQueue {
+- (NSOperationQueue*)operationQueue
+{
     return operationQueue;
 }
 
-- (BOOL)scmIsEnabled:(NSString*)scmName;
+- (BOOL)scmIsEnabled:(NSString*)scmName
 {
-	return [[NSUserDefaults standardUserDefaults] boolForKey:[NSString stringWithFormat:@"ProjectPlus %@ Enabled", scmName]];
+    return [[NSUserDefaults standardUserDefaults] boolForKey:[NSString stringWithFormat:@"ProjectPlus %@ Enabled", scmName]];
 }
 
-- (void)setScm:(NSString*)scmName isEnabled:(BOOL)enabled;
+- (void)setScm:(NSString*)scmName isEnabled:(BOOL)enabled
 {
-	[[NSUserDefaults standardUserDefaults] setBool:enabled forKey:[NSString stringWithFormat:@"ProjectPlus %@ Enabled", scmName]];
+    [[NSUserDefaults standardUserDefaults] setBool:enabled forKey:[NSString stringWithFormat:@"ProjectPlus %@ Enabled", scmName]];
 }
 
-- (void)redisplayProjectTrees;
+- (void)redisplayProjectTrees
 {
-	[[NSNotificationCenter defaultCenter] postNotificationName:ProjectPlus_redrawRequired object:nil];
+    [[NSNotificationCenter defaultCenter] postNotificationName:ProjectPlus_redrawRequired object:nil];
 }
 
-- (void)registerSCMDelegate:(id <SCMIconDelegate>)delegate;
+- (void)registerSCMDelegate:(id <SCMIconDelegate>)delegate
 {
-	[delegates addObject:delegate];
-	[self redisplayProjectTrees];
+    [delegates addObject:delegate];
+    [self redisplayProjectTrees];
 }
 
 - (void)awakeFromNib
 {
-	[self setSelectedIconPackIndex:[[NSUserDefaults standardUserDefaults] integerForKey:@"SCMMateSelectedIconPack"]];
-	[iconPacksController addObserver:self forKeyPath:@"selectionIndex" options:NULL context:NULL];
+    [self setSelectedIconPackIndex:[[NSUserDefaults standardUserDefaults] integerForKey:@"SCMMateSelectedIconPack"]];
+    [iconPacksController addObserver:self
+                          forKeyPath:@"selectionIndex"
+                             options:NULL
+                             context:NULL];
 }
 
 - (void)dealloc
 {
-	[delegates release];
-	[iconPacks release];
+    [delegates release];
+    [iconPacks release];
     [operationQueue release];
-	[super dealloc];
+    [super dealloc];
 }
 
-// =========
-// = Icons =
-// =========
-- (NSDictionary*)iconPackNamed:(NSString*)iconPackName;
+
+
+- (NSDictionary*)iconPackNamed:(NSString*)iconPackName
 {
-	size_t imageCount             = sizeof(overlayImageNames) / sizeof(NSString*);
-	NSMutableDictionary* iconPack = [NSMutableDictionary dictionaryWithCapacity:imageCount];
-	NSString* path                = [@"icons" stringByAppendingPathComponent:iconPackName];
+    size_t imageCount             = sizeof(overlayImageNames) / sizeof(NSString*);
+    NSMutableDictionary* iconPack = [NSMutableDictionary dictionaryWithCapacity:imageCount];
+    NSString* path                = [@"icons" stringByAppendingPathComponent:iconPackName];
 
-	for(size_t index = 0; index < imageCount; index += 1)
-	{
-		NSString* imageName   = overlayImageNames[index];
-		size_t imageTypeCount = [[NSImage imageFileTypes] count];
+    for (size_t index = 0; index < imageCount; index += 1) {
+        NSString* imageName   = overlayImageNames[index];
+        size_t imageTypeCount = [[NSImage imageFileTypes] count];
 
-		for(size_t index = 0; index < imageTypeCount; index += 1)
-		{
-			NSString* imageType = [[NSImage imageFileTypes] objectAtIndex:index];
+        for (size_t index = 0; index < imageTypeCount; index += 1) {
+            NSString* imageType = [[NSImage imageFileTypes] objectAtIndex:index];
+            NSString* imagePath = [[NSBundle bundleForClass:[SCMIcons class]] pathForResource:imageName
+                                                                                       ofType:imageType
+                                                                                  inDirectory:path];
+            if (!imagePath) {
+                continue;
+            }
 
-			if(NSString* imagePath = [[NSBundle bundleForClass:[SCMIcons class]] pathForResource:imageName ofType:imageType inDirectory:path])
-			{
-				if(NSImage* image = [[NSImage alloc] initByReferencingFile:imagePath])
-				{
-					// [image setFlipped:YES];
-					[iconPack setObject:image forKey:imageName];
-					[image release];
-					break;
-				}
-			}
-		}
-	}
-	return iconPack;
+            NSImage* image = [[NSImage alloc] initByReferencingFile:imagePath];
+            if (!image) {
+                continue;
+            }
+            [iconPack setObject:image forKey:imageName];
+            [image release];
+            break;
+        }
+    }
+    return iconPack;
 }
 
 - (void)loadIconPacks;
 {
-	[iconPacks release];
-	iconPacks = [[NSMutableArray alloc] initWithCapacity:5];
-	
-	// NSArray* iconPackNames = [NSArray arrayWithObjects:@"Straight",@"Classic",nil];
-	NSString* iconsPath = [[NSBundle bundleForClass:[self class]] pathForResource:@"icons" ofType:nil];
-	NSDirectoryEnumerator* dirEnum = [[NSFileManager defaultManager] enumeratorAtPath:iconsPath];
-	NSString* iconPackName;
+    [iconPacks release];
+    iconPacks = [[NSMutableArray alloc] initWithCapacity:5];
 
-	while((iconPackName = [dirEnum nextObject]))
-	{
-		[dirEnum skipDescendents];
-		if([[dirEnum fileAttributes] objectForKey:NSFileType] == NSFileTypeDirectory)
-		{
-			NSDictionary* icons = [self iconPackNamed:iconPackName];
-			if(icons && [icons count])
-			{
-				NSDictionary* iconPack = [NSDictionary dictionaryWithObjectsAndKeys:[self iconPackNamed:iconPackName],@"icons",iconPackName,@"name",nil];
-				[iconPacks addObject:iconPack];
-			}
-		}
-	}
+    NSString* iconsPath = [[NSBundle bundleForClass:[self class]] pathForResource:@"icons" ofType:nil];
+    NSDirectoryEnumerator* dirEnum = [[NSFileManager defaultManager] enumeratorAtPath:iconsPath];
+    NSString* iconPackName;
+
+    while ((iconPackName = [dirEnum nextObject])) {
+        [dirEnum skipDescendents];
+        if ([[dirEnum fileAttributes] objectForKey:NSFileType] == NSFileTypeDirectory) {
+            NSDictionary* icons = [self iconPackNamed:iconPackName];
+            if (icons && [icons count]) {
+                NSDictionary* iconPack = [NSDictionary dictionaryWithObjectsAndKeys:[self iconPackNamed:iconPackName],@"icons",iconPackName,@"name",nil];
+                [iconPacks addObject:iconPack];
+            }
+        }
+    }
 }
 
-- (NSDictionary*)iconPack;
+- (NSDictionary*)iconPack
 {
-	NSDictionary* iconPack = nil;
-	int selectedIndex = [[NSUserDefaults standardUserDefaults] integerForKey:@"SCMMateSelectedIconPack"];
+    NSDictionary* iconPack = nil;
+    int selectedIndex = [[NSUserDefaults standardUserDefaults] integerForKey:@"SCMMateSelectedIconPack"];
 
-	if(selectedIndex < [[iconPacksController arrangedObjects] count])
-		iconPack = [[[iconPacksController arrangedObjects] objectAtIndex:selectedIndex] objectForKey:@"icons"];
+    if (selectedIndex < [[iconPacksController arrangedObjects] count]) {
+        iconPack = [[[iconPacksController arrangedObjects] objectAtIndex:selectedIndex] objectForKey:@"icons"];
+    }
 
-	return iconPack;
+    return iconPack;
 }
 
 - (NSImage*)overlayIcon:(NSString*)name
 {
-	return [[self iconPack] objectForKey:name];
+    return [[self iconPack] objectForKey:name];
 }
 
 - (NSImage *)projectIconNamed:(NSString *)overlayName forScmNamed:(NSString *)scmName
 {
-	static NSMutableDictionary	*projectRootIcons=nil;
-	
-	if(!scmName) return nil;
-	
-	NSString	*imageName=[scmName stringByAppendingString:overlayName];
-	NSImage		*image=[projectRootIcons objectForKey:imageName];
-	
-	if(!image)
-	{
-		if(!projectRootIcons) projectRootIcons=[[NSMutableDictionary alloc]init];
-		
-		NSString	*path=[[NSBundle bundleForClass:[SCMIcons class]]
-			pathForImageResource:imageName
-		];
+    static NSMutableDictionary *projectRootIcons = nil;
 
-		if(path)
-		{
-			image=[[NSImage alloc]initByReferencingFile:path];
-		}
-		
-		if(!image) image=(NSImage *)[NSNull null];
-		
-		[projectRootIcons setObject:image forKey:imageName];
-	}
-	
-	if(image==(NSImage *)[NSNull null]) return nil;
-	
-	return image;	
+    if (!scmName) {
+        return nil;
+    }
+
+    NSString *imageName = [scmName stringByAppendingString:overlayName];
+    NSImage *image = [projectRootIcons objectForKey:imageName];
+
+    if (!image) {
+        if (!projectRootIcons) {
+            projectRootIcons = [[NSMutableDictionary alloc]init];
+        }
+
+        NSString *path = [[NSBundle bundleForClass:[SCMIcons class]] pathForImageResource:imageName];
+
+        if (path) {
+            image = [[NSImage alloc]initByReferencingFile:path];
+        }
+
+        if (!image) {
+            image = (NSImage *)[NSNull null];
+        }
+
+        [projectRootIcons setObject:image forKey:imageName];
+    }
+
+    if (image == (NSImage *)[NSNull null]) {
+        return nil;
+    }
+
+    return image;
 }
 
 - (NSImage*)imageForStatusCode:(SCMIconsStatus)status
 {
-	int s=status;
-	s&=0x3ff;
-	
-	switch(s)
-	{
-		case 0:
-		case SCMIconsStatusVersioned:    return [self overlayIcon:@"Versioned"];
-		case SCMIconsStatusModified:     return [self overlayIcon:@"Modified"];
-		case SCMIconsStatusAdded:        return [self overlayIcon:@"Added"];
-		case SCMIconsStatusDeleted:      return [self overlayIcon:@"Deleted"];
-		case SCMIconsStatusConflicted:   return [self overlayIcon:@"Conflicted"];
-		case SCMIconsStatusUnversioned:  return [self overlayIcon:@"Unversioned"];
-	}
+    int s = status;
+    s &= 0x3ff;
 
-	return nil;
+    switch(s) {
+        case 0:
+        case SCMIconsStatusVersioned:    return [self overlayIcon:@"Versioned"];
+        case SCMIconsStatusModified:     return [self overlayIcon:@"Modified"];
+        case SCMIconsStatusAdded:        return [self overlayIcon:@"Added"];
+        case SCMIconsStatusDeleted:      return [self overlayIcon:@"Deleted"];
+        case SCMIconsStatusConflicted:   return [self overlayIcon:@"Conflicted"];
+        case SCMIconsStatusUnversioned:  return [self overlayIcon:@"Unversioned"];
+    }
+
+    return nil;
 }
 
 - (void)setSelectedIconPackIndex:(int)index
 {
-	[iconPacksController setSelectionIndex:index];
-	[[NSUserDefaults standardUserDefaults] setInteger:index forKey:@"SCMMateSelectedIconPack"];
-	[self redisplayProjectTrees];
+    [iconPacksController setSelectionIndex:index];
+    [[NSUserDefaults standardUserDefaults] setInteger:index forKey:@"SCMMateSelectedIconPack"];
+    [self redisplayProjectTrees];
 }
 
-- (void)observeValueForKeyPath:(NSString*)key ofObject:(id)object change:(NSDictionary*)changes context:(void*)context
+- (void)observeValueForKeyPath:(NSString*)key
+                      ofObject:(id)object
+                        change:(NSDictionary*)changes
+                       context:(void*)context
 {
-	[self setSelectedIconPackIndex:[iconPacksController selectionIndex]];
+    [self setSelectedIconPackIndex:[iconPacksController selectionIndex]];
 }
 
-// Delegate notifications/requests
-- (void)reloadStatusesForAllProjects:(BOOL)reload;
+- (void)reloadStatusesForAllProjects:(BOOL)reload
 {
-	NSArray* windows = [NSApp windows];
+    NSArray* windows = [NSApp windows];
 
-	for(int index = 0; index < [windows count]; index++)
-	{
-		NSWindow* window = [windows objectAtIndex:index];
-		if([window delegate] && [[window delegate] isKindOfClass:NSClassFromString(@"OakProjectController")])
-		{
-			NSWindowController *controller = (NSWindowController*)[window delegate];
-			NSString *projectDirectory = [controller valueForKey:@"projectDirectory"];
-			[self reloadStatusesForProject:projectDirectory];
-		}
-	}
+    for (int index = 0; index < [windows count]; index++) {
+        NSWindow* window = [windows objectAtIndex:index];
+        if ([window delegate] && [[window delegate] isKindOfClass:NSClassFromString(@"OakProjectController")]) {
+            NSWindowController *controller = (NSWindowController*)[window delegate];
+            NSString *projectDirectory = [controller valueForKey:@"projectDirectory"];
+            [self reloadStatusesForProject:projectDirectory];
+        }
+    }
     if (reload == YES) {
         [operationQueue waitUntilAllOperationsAreFinished];
         [self redisplayProjectTrees];
     }
-	
+
 }
 
-- (void)reloadStatusesForProject:(NSString*)projectPath;
+- (void)reloadStatusesForProject:(NSString*)projectPath
 {
-	for(int delegateIndex = 0; delegateIndex < [delegates count]; delegateIndex++)
-	{
-		id delegate = [delegates objectAtIndex:delegateIndex];
-		if([self scmIsEnabled:[delegate scmName]] && [delegate respondsToSelector:@selector(reloadStatusesForProject:)])
-		    [delegate reloadStatusesForProject:projectPath];
-	}
+    for (int delegateIndex = 0; delegateIndex < [delegates count]; delegateIndex++) {
+        id delegate = [delegates objectAtIndex:delegateIndex];
+        if ([self scmIsEnabled:[delegate scmName]] && [delegate respondsToSelector:@selector(reloadStatusesForProject:)]) {
+            [delegate reloadStatusesForProject:projectPath];
+        }
+    }
 }
 
-- (SCMIconsStatus)statusForPath:(NSString*)path inProject:(NSString*)projectPath reload:(BOOL)reload scmName:(NSString **)scmName
+- (SCMIconsStatus)statusForPath:(NSString*)path
+                      inProject:(NSString*)projectPath
+                         reload:(BOOL)reload scmName:(NSString **)scmName
 {
-	if([path length] == 0)
-		return SCMIconsStatusUnknown;
+    if ([path length] == 0) {
+        return SCMIconsStatusUnknown;
+    }
 
-	for(int index = 0; index < [delegates count]; index++)
-	{
-		id delegate = [delegates objectAtIndex:index];
-		if([self scmIsEnabled:[delegate scmName]])
-		{
-			SCMIconsStatus status = [delegate statusForPath:path inProject:projectPath reload:reload];
-			if(status != SCMIconsStatusUnknown)
-			{
-				if(scmName) *scmName=[delegate scmName];
-				return status;
-			}
-		}
-	}
-	return SCMIconsStatusUnknown;
+    for (int index = 0; index < [delegates count]; index++) {
+        id delegate = [delegates objectAtIndex:index];
+        if ([self scmIsEnabled:[delegate scmName]]) {
+            SCMIconsStatus status = [delegate statusForPath:path
+                                                  inProject:projectPath
+                                                     reload:reload];
+            if (status != SCMIconsStatusUnknown) {
+                if (scmName) {
+                    *scmName = [delegate scmName];
+                }
+                return status;
+            }
+        }
+    }
+    return SCMIconsStatusUnknown;
 }
-- (SCMIconsStatus)statusForPath:(NSString*)path inProject:(NSString*)projectPath reload:(BOOL)reload
+
+- (SCMIconsStatus)statusForPath:(NSString*)path
+                      inProject:(NSString*)projectPath
+                         reload:(BOOL)reload
 {
-	return [self statusForPath:path inProject:projectPath reload:reload scmName:NULL]; 
+    return [self statusForPath:path
+                     inProject:projectPath
+                        reload:reload
+                       scmName:NULL];
 }
+
 - (int)numberOfRowsInTableView:(NSTableView*)tableView
 {
-	return [delegates count];
+    return [delegates count];
 }
 
-- (void)tableView:(NSTableView*)tableView willDisplayCell:(id)cell forTableColumn:(NSTableColumn*)tableColumn row:(int)rowIndex
+- (void)tableView:(NSTableView*)tableView
+  willDisplayCell:(id)cell
+   forTableColumn:(NSTableColumn*)tableColumn
+              row:(int)rowIndex
 {
-	NSString* name = [[delegates objectAtIndex:rowIndex] scmName];
-	[cell setTitle:name];
-	[cell setState:[self scmIsEnabled:name] ? NSOnState : NSOffState];
+    NSString* name = [[delegates objectAtIndex:rowIndex] scmName];
+    [cell setTitle:name];
+    [cell setState:[self scmIsEnabled:name] ? NSOnState : NSOffState];
 }
 
 - (id)tableView:(NSTableView*)tableView objectValueForTableColumn:(NSTableColumn*)tableColumn row:(int)rowIndex
 {
-	return [[delegates objectAtIndex:rowIndex] scmName];
+    return [[delegates objectAtIndex:rowIndex] scmName];
 }
 
-- (void)tableView:(NSTableView*)tableView setObjectValue:(id)value forTableColumn:(NSTableColumn*)tableColumn row:(int)rowIndex
+- (void)tableView:(NSTableView*)tableView
+   setObjectValue:(id)value
+   forTableColumn:(NSTableColumn*)tableColumn
+              row:(int)rowIndex
 {
-	
-	[self setScm:[[delegates objectAtIndex:rowIndex] scmName] isEnabled:[value boolValue]];
-	[self reloadStatusesForAllProjects:YES];
+
+    [self setScm:[[delegates objectAtIndex:rowIndex] scmName] isEnabled:[value boolValue]];
+    [self reloadStatusesForAllProjects:YES];
 }
 
-// ===========
-// = Utility =
-// ===========
 - (NSString*)pathForVariable:(NSString*)shellVariableName paths:(NSArray*)paths;
 {
-	NSArray* prefs = [[OakPreferencesManager sharedInstance] performSelector:@selector(shellVariables)];
-	for(int index = 0; index < [prefs count]; index++)
-	{
-		NSDictionary* pref = [prefs objectAtIndex:index];
-		if([[pref objectForKey:@"variable"] isEqualToString:shellVariableName] && [[pref objectForKey:@"enabled"] boolValue])
-			return [pref objectForKey:@"value"];
-	}
-	for(int index = 0; index < [paths count]; index++)
-	{
-		NSString* path = [paths objectAtIndex:index];
-		if([[NSFileManager defaultManager] fileExistsAtPath:path])
-			return path;
-	}
-	return nil;
+    NSArray* prefs = [[OakPreferencesManager sharedInstance] performSelector:@selector(shellVariables)];
+    for (int index = 0; index < [prefs count]; index++) {
+        NSDictionary* pref = [prefs objectAtIndex:index];
+        if ([[pref objectForKey:@"variable"] isEqualToString:shellVariableName] && [[pref objectForKey:@"enabled"] boolValue]) {
+            return [pref objectForKey:@"value"];
+        }
+    }
+    for (int index = 0; index < [paths count]; index++) {
+        NSString* path = [paths objectAtIndex:index];
+        if ([[NSFileManager defaultManager] fileExistsAtPath:path]) {
+            return path;
+        }
+    }
+    return nil;
 }
 @end

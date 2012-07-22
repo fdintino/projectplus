@@ -2,7 +2,7 @@
 
 @interface CWTMSplitView : KFSplitView
 {
-	BOOL sidebarOnRight;
+    BOOL sidebarOnRight;
 }
 - (BOOL)sideBarOnRight;
 - (void)setSideBarOnRight:(BOOL)onRight;

@@ -10,92 +10,102 @@
 @implementation NSButton (OakMenuButton_OpenWith)
 - (void)OpenWith_awakeFromNib
 {
-	[self OpenWith_awakeFromNib];
-	
-	if(not [OpenWith useOpenWith])
-		return;
+    [self OpenWith_awakeFromNib];
 
-	if(not [[self window] isKindOfClass:NSClassFromString(@"NSDrawerWindow")])
-		return;
+    if (not [OpenWith useOpenWith]) {
+        return;
+    }
 
-	NSMenu *menu = [self valueForKey:@"actionMenu"];
+    if (not [[self window] isKindOfClass:NSClassFromString(@"NSDrawerWindow")]) {
+        return;
+    }
 
-	NSArray* items = [menu itemArray];
-	for(int index = 0; index < [items count]; index++)
-	{
-		if([[items objectAtIndex:index] action] == @selector(openFileWithFinder:))
-		{
-			NSMenuItem *openWithMenuItem = [[NSMenuItem alloc] initWithTitle:@"Open With…" action:nil keyEquivalent:@""];
-			{
-				NSMenu *openWithSubMenu = [[NSMenu alloc] init];
-				[openWithSubMenu setDelegate:(NSButton<NSMenuDelegate>*)self];
+    NSMenu *menu = [self valueForKey:@"actionMenu"];
 
-				[openWithMenuItem setSubmenu:openWithSubMenu];
-				[openWithSubMenu release];
-			}
-			[menu insertItem:openWithMenuItem atIndex:index+1];
-			[openWithMenuItem release];
-			break;
-		}
-	}
+    NSArray* items = [menu itemArray];
+    for (int index = 0; index < [items count]; index++) {
+        if ([[items objectAtIndex:index] action] == @selector(openFileWithFinder:)) {
+            NSMenuItem *openWithMenuItem = [[NSMenuItem alloc] initWithTitle:@"Open With…"
+                                                                      action:nil
+                                                               keyEquivalent:@""];
+            {
+                NSMenu *openWithSubMenu = [[NSMenu alloc] init];
+                [openWithSubMenu setDelegate:(NSButton<NSMenuDelegate>*)self];
+
+                [openWithMenuItem setSubmenu:openWithSubMenu];
+                [openWithSubMenu release];
+            }
+            [menu insertItem:openWithMenuItem atIndex:index+1];
+            [openWithMenuItem release];
+            break;
+        }
+    }
 
 }
 
 - (NSURL*)URLForOpeningApp
 {
-	NSOutlineView* outlineView = [self valueForKey:@"outlineView"];
-	NSDictionary* item         = [outlineView itemAtRow:[outlineView selectedRow]];
-	NSString* path             = nil;
-	if([item objectForKey:@"filename"])
-		path = [item objectForKey:@"filename"];
-	else if([item objectForKey:@"sourceDirectory"])
-		path = [item objectForKey:@"sourceDirectory"];
-	return [NSURL fileURLWithPath:path];
+    NSOutlineView* outlineView = [self valueForKey:@"outlineView"];
+    NSDictionary* item         = [outlineView itemAtRow:[outlineView selectedRow]];
+    NSString* path             = nil;
+    if ([item objectForKey:@"filename"]) {
+        path = [item objectForKey:@"filename"];
+    } else if ([item objectForKey:@"sourceDirectory"]) {
+        path = [item objectForKey:@"sourceDirectory"];
+    }
+    return [NSURL fileURLWithPath:path];
 }
 
 - (int)numberOfItemsInMenu:(NSMenu*)menu
 {
-	return [[OpenWith applicationsForURL:[self URLForOpeningApp]] count];
+    return [[OpenWith applicationsForURL:[self URLForOpeningApp]] count];
 }
 
-- (BOOL)menu:(NSMenu*)menu updateItem:(NSMenuItem*)item atIndex:(int)index shouldCancel:(BOOL)flag
+- (BOOL)menu:(NSMenu*)menu
+  updateItem:(NSMenuItem*)item
+     atIndex:(int)index
+shouldCancel:(BOOL)flag
 {
-	NSURL* URL = [[OpenWith applicationsForURL:[self URLForOpeningApp]] objectAtIndex:index];
-	NSString* title;
-	LSCopyDisplayNameForURL((CFURLRef)URL, (CFStringRef*)&title);
-	[item setTitle:title];
-	[title release];
-	[item setTarget:self];
-	[item setTag:index];
-	NSImage* icon = [[NSImage alloc] initWithSize:NSMakeSize(16, 16)];
-	{
-		[icon lockFocus];
-		[[[NSWorkspace sharedWorkspace] iconForFile:[URL path]] drawInRect:NSMakeRect(0, 0, 16, 16) fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
-		[item setImage:icon];
-		[icon unlockFocus];
-	}
-	[icon release];
-	[item setAction:@selector(openSelectedItemWith:)];
-	
-	return YES;
+    NSURL* URL = [[OpenWith applicationsForURL:[self URLForOpeningApp]] objectAtIndex:index];
+    NSString* title;
+    LSCopyDisplayNameForURL((CFURLRef)URL, (CFStringRef*)&title);
+    [item setTitle:title];
+    [title release];
+    [item setTarget:self];
+    [item setTag:index];
+    NSImage* icon = [[NSImage alloc] initWithSize:NSMakeSize(16, 16)];
+    {
+        NSImage *iconToDraw = [[NSWorkspace sharedWorkspace] iconForFile:[URL path]];
+        [icon lockFocus];
+        [iconToDraw drawInRect:NSMakeRect(0, 0, 16, 16)
+                      fromRect:NSZeroRect
+                     operation:NSCompositeSourceOver
+                      fraction:1.0];
+        [item setImage:icon];
+        [icon unlockFocus];
+    }
+    [icon release];
+    [item setAction:@selector(openSelectedItemWith:)];
+
+    return YES;
 }
 
 - (void)openSelectedItemWith: (NSMenuItem *) sender
 {
-	NSString* filePath = [[self URLForOpeningApp] path];
-	NSString* appPath = [[[OpenWith applicationsForURL:[self URLForOpeningApp]] objectAtIndex:(NSUInteger)[sender tag]] path];
-	[[NSWorkspace sharedWorkspace] openFile:filePath withApplication:appPath];
+    NSString* filePath = [[self URLForOpeningApp] path];
+    NSString* appPath = [[[OpenWith applicationsForURL:[self URLForOpeningApp]] objectAtIndex:(NSUInteger)[sender tag]] path];
+    [[NSWorkspace sharedWorkspace] openFile:filePath withApplication:appPath];
 }
 
 - (BOOL)OpenWith_validateMenuItem:(id <NSMenuItem>)item
 {
     NSMenuItem *menuItem = (NSMenuItem *) item;
-	if([menuItem action] == @selector(openSelectedItemWith:))
-		return YES;
-    
-   
-    if([self respondsToSelector:@selector(OpenWith_validateMenuItem)] == YES)
-    {
+    if ([menuItem action] == @selector(openSelectedItemWith:)) {
+        return YES;
+    }
+
+
+    if ([self respondsToSelector:@selector(OpenWith_validateMenuItem)] == YES) {
         return [self OpenWith_validateMenuItem:item];
     } else {
         return YES;
@@ -108,23 +118,27 @@ static NSMutableDictionary* applicationBindings = [[NSMutableDictionary alloc] i
 @implementation OpenWith
 + (void)load
 {
-	[OakMenuButton jr_swizzleMethod:@selector(awakeFromNib) withMethod:@selector(OpenWith_awakeFromNib) error:NULL];
-	[OakMenuButton jr_swizzleMethod:@selector(validateMenuItem:) withMethod:@selector(OpenWith_validateMenuItem:) error:NULL];
+    [OakMenuButton jr_swizzleMethod:@selector(awakeFromNib)
+                         withMethod:@selector(OpenWith_awakeFromNib)
+                              error:NULL];
+
+    [OakMenuButton jr_swizzleMethod:@selector(validateMenuItem:)
+                         withMethod:@selector(OpenWith_validateMenuItem:)
+                              error:NULL];
 }
 
 + (BOOL)useOpenWith
 {
-	return YES;
+    return YES;
 }
 
 + (NSArray*)applicationsForURL:(NSURL*)URL
 {
-	if(! [applicationBindings objectForKey:URL])
-	{
-		NSArray* apps = (NSArray*)LSCopyApplicationURLsForURL((CFURLRef)URL, kLSRolesAll);
-		[applicationBindings setObject:(NSArray*)apps forKey:URL];
-		[apps release];
-	}
-	return [applicationBindings objectForKey:URL];
+    if (![applicationBindings objectForKey:URL]) {
+        NSArray* apps = (NSArray*)LSCopyApplicationURLsForURL((CFURLRef)URL, kLSRolesAll);
+        [applicationBindings setObject:(NSArray*)apps forKey:URL];
+        [apps release];
+    }
+    return [applicationBindings objectForKey:URL];
 }
 @end
