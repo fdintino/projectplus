@@ -208,7 +208,7 @@ static SVNIcons* SharedInstance;
 {
     if (SharedInstance) {
         [self release];
-    } else if (self = SharedInstance = [[super init] retain]) {
+    } else if ((self = SharedInstance = [[super init] retain])) {
         if (svn_cmdline_init("SVNIcons", stderr) != EXIT_SUCCESS) {
             return NULL;
         }
@@ -251,9 +251,10 @@ static SVNIcons* SharedInstance;
 // =============
 // = SVN stuff =
 // =============
-static void status_func(void* baton, const char* path, svn_wc_status2_t* status)
+static svn_error_t* status_func(void* baton, const char* path, svn_wc_status2_t* status, apr_pool_t *pool)
 {
     [statusForFiles setObject:[NSNumber numberWithInt:status->text_status] forKey:(NSString*)baton];
+    return SVN_NO_ERROR;
 }
 
 - (svn_wc_status_kind)svnStatusForPath:(NSString*)path
@@ -267,8 +268,7 @@ static void status_func(void* baton, const char* path, svn_wc_status2_t* status)
             rev.kind = svn_opt_revision_head;
 
             // (result_rev,  path,  revision,  status_func, status_baton, recurse, get_all, update, no_ignore, ignore_externals, ctx, pool)
-            svn_error_t* err = svn_client_status2(NULL, [path UTF8String], &rev, status_func, path, false, false, false, false, true, ctx, subpool);
-
+            svn_error_t *err = svn_client_status4(NULL, [path UTF8String], &rev, status_func, path, svn_depth_immediates, false, false, false, true, NULL, ctx, subpool);
             if (err) {
                 svn_error_clear(err);
             } else if ([statusForFiles objectForKey:path]) {

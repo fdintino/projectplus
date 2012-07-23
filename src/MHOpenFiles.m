@@ -106,8 +106,8 @@ static NSMutableArray *objectList = NULL;
 - (void)selectFile:(NSString *)path
 {
     int len = [outlineView numberOfRows];
-    int i = 0;
-    for (i; i<len; i++) {
+    int i;
+    for (i = 0; i<len; i++) {
         id rowPath = [outlineView itemAtRow:i];
         if ([path isEqualToString:rowPath]) {
             [outlineView selectRowIndexes:[NSIndexSet indexSetWithIndex:i] byExtendingSelection:NO];
@@ -179,21 +179,21 @@ static NSMutableArray *objectList = NULL;
 
     // get object
     id item = [outlineView itemAtRow:[outlineView selectedRow]];
-    [tabView selectTabWithIdentifier:item];
+    [tabView performSelector:@selector(selectTabWithIdentifier:) withObject:item];
 
     // deselect the file broswer
     [fileBrowserView deselectAll:self];
 }
 
-- (BOOL)outlineView:(NSOutlineView *)outlineView writeItems:(NSArray *)items toPasteboard:(NSPasteboard *)pasteboard
+- (BOOL)outlineView:(NSOutlineView *)ov writeItems:(NSArray *)items toPasteboard:(NSPasteboard *)pasteboard
 {
     for (id item in items) {
         if ([item isEqualToString:@"WORKSPACE"]) {
             continue;
         }
 
-        draggedIndex = [outlineView rowForItem:item]-1;
-        selectedItem = [outlineView itemAtRow:[outlineView selectedRow]];
+        draggedIndex = [ov rowForItem:item]-1;
+        selectedItem = [ov itemAtRow:[ov selectedRow]];
     }
 
     //NSData *data = [NSKeyedArchiver archivedDataWithRootObject:rowIndexes];
@@ -211,7 +211,7 @@ static NSMutableArray *objectList = NULL;
     return NSDragOperationNone;
 }
 
-- (BOOL)outlineView:(NSOutlineView *)outlineView acceptDrop:(id<NSDraggingInfo>)info item:(id)item childIndex:(NSInteger)index
+- (BOOL)outlineView:(NSOutlineView *)ov acceptDrop:(id<NSDraggingInfo>)info item:(id)item childIndex:(NSInteger)index
 {
     if (item == nil && index == 1) {
         index = [openFiles count];
@@ -228,7 +228,7 @@ static NSMutableArray *objectList = NULL;
     [openFiles insertObject:object atIndex:index];
 
 
-    [outlineView reloadData];
+    [ov reloadData];
 
     [self selectFile:selectedItem];
 

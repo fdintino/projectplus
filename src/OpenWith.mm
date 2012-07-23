@@ -97,10 +97,10 @@ shouldCancel:(BOOL)flag
     [[NSWorkspace sharedWorkspace] openFile:filePath withApplication:appPath];
 }
 
-- (BOOL)OpenWith_validateMenuItem:(id <NSMenuItem>)item
+- (BOOL)OpenWith_validateMenuItem:(id)item
 {
-    NSMenuItem *menuItem = (NSMenuItem *) item;
-    if ([menuItem action] == @selector(openSelectedItemWith:)) {
+    SEL action = (SEL)[item performSelector:@selector(action)];
+    if (action == @selector(openSelectedItemWith:)) {
         return YES;
     }
 
