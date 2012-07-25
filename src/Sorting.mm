@@ -230,7 +230,18 @@ NSInteger sort_items(id a, id b, void *context)
 
 - (void)ProjectPlus_Sorting_outlineViewItemDidExpand:(NSNotification *)notification
 {
-    id item = [[notification userInfo] objectForKey:@"NSObject"];
+    // This event gets called during focus events as well as mouseDown events.
+    //
+    // We check that the expand event was triggered by a mouseDown so that we don't have
+    // duplicate calls to recursiveSortOutlineView:ascending:byExtension:foldersOnTop:
+    // from applicationDidBecomeActive:
+
+    NSArray *callStack = [NSThread callStackSymbols];
+    NSPredicate *callStackTest = [NSPredicate predicateWithFormat:@"SELF MATCHES %@", @".*mouseDown.*"];
+    NSArray *callStackMatches = [callStack filteredArrayUsingPredicate:callStackTest];
+    if ([callStackMatches count] == 0) {
+        return;
+    }
 
     BOOL ascending, byExtension, foldersOnTop;
 
@@ -245,9 +256,10 @@ NSInteger sort_items(id a, id b, void *context)
         return;
     }
 
+    id item = [[notification userInfo] objectForKey:@"NSObject"];
     NSMutableArray *children = [item objectForKey:@"children"];
 
-    if (children != nil && [children count] > 0) {
+    if (children != NULL && children != nil && [children count] > 0) {
         NSArray *selectedItems;
         NSUInteger selectedItemsCount = 0;
         @try {
@@ -270,6 +282,27 @@ NSInteger sort_items(id a, id b, void *context)
                               afterDelay:0.0];
         }
     }
+}
+
+- (void)ProjectPlus_Sorting_reloadItem:(id)item reloadChildren:(BOOL)reloadChildren
+{
+    BOOL ascending, byExtension, foldersOnTop;
+    id delegate = [self delegate];
+    if ([delegate isKindOfClass:[NSWindowController class]]) {
+        NSMutableDictionary *sortDescriptor = [delegate sortDescriptor];
+        ascending    = ![[sortDescriptor objectForKey:@"descending"] boolValue];
+        byExtension  =  [[sortDescriptor objectForKey:@"byExtension"] boolValue];
+        foldersOnTop =  [[sortDescriptor objectForKey:@"foldersOnTop"] boolValue];
+        NSMutableArray *children = [item objectForKey:@"children"];
+
+        if (children != nil && [children count] > 0) {
+            [children recursiveSortOutlineView:self
+                                     ascending:ascending
+                                   byExtension:byExtension
+                                  foldersOnTop:foldersOnTop];
+        }
+    }
+    [self ProjectPlus_Sorting_reloadItem:item reloadChildren:reloadChildren];
 }
 @end
 
@@ -336,6 +369,10 @@ static NSMutableArray* sortDescriptors = [[NSMutableArray alloc] initWithCapacit
 
     [OakOutlineView jr_swizzleMethod:@selector(initWithCoder:)
                           withMethod:@selector(ProjectPlus_Sorting_initWithCoder:)
+                               error:NULL];
+
+    [OakOutlineView jr_swizzleMethod:@selector(reloadItem:reloadChildren:)
+                          withMethod:@selector(ProjectPlus_Sorting_reloadItem:reloadChildren:)
                                error:NULL];
 
     [OakProjectController jr_swizzleMethod:@selector(outlineView:setObjectValue:forTableColumn:byItem:)

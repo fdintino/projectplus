@@ -150,10 +150,6 @@ static NSString* const PROJECTPLUS_PREFERENCES_LABEL = @"Project+";
                                withObject:nil
                             waitUntilDone:NO];
     }
-
-    [self performSelectorOnMainThread:@selector(resortItems)
-                           withObject:nil
-                        waitUntilDone:true];
     [self ProjectPlus_redrawRequired:notification];
 }
 @end
